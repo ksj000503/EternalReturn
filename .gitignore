@@ -1,0 +1,15 @@
+# ─── 빌드 결과물 ────────────────────────────────────
+Binaries/
+Build/
+Intermediate/
+DerivedDataCache/
+
+# ─── 에디터 임시 파일 ───────────────────────────────
+Saved/
+.vs/
+
+# ─── Visual Studio ──────────────────────────────────
+*.VC.db
+*.suo
+*.sdf
+*.opensdf

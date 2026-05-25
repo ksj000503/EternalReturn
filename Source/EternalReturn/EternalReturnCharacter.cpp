@@ -1,0 +1,96 @@
+#include "EternalReturnCharacter.h"
+#include "Net/UnrealNetwork.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+AEternalReturnCharacter::AEternalReturnCharacter()
+{
+    // ─── 카메라 세팅 ─────────────────────────────────
+
+    CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+    CameraBoom->SetupAttachment(RootComponent);
+    CameraBoom->SetUsingAbsoluteRotation(true);
+    CameraBoom->TargetArmLength = 800.f;
+    CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
+    CameraBoom->bDoCollisionTest = false;
+
+    TopDownCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
+    TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+    TopDownCameraComponent->bUsePawnControlRotation = false;
+
+
+    bUseControllerRotationPitch = false;
+    bUseControllerRotationYaw = false;
+    bUseControllerRotationRoll = false;
+
+    GetCharacterMovement()->bOrientRotationToMovement = true;
+    GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
+
+    // ─── 캐릭터 전용 스탯 초기값 ────────────────────
+
+    MaxSP = 100.f;
+    CurrentSP = 100.f;
+    SPRegen = 1.f;
+    SkillAmplification = 0.f;
+    CooldownReduction = 0.f;
+    BasicAttackBonus = 0.f;
+    DamageReduction = 0.f;
+    CriticalChance = 0.f;
+    CriticalDamage = 150.f;  // 기본 치명타 피해 150%
+
+    // ─── 재화 초기값 ─────────────────────────────────
+
+    Gold = 0;
+    Experience = 0;
+
+    // ─── 상태 초기값 ─────────────────────────────────
+
+    bIsResting = false;
+}
+
+void AEternalReturnCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+// ─── 리플리케이션 등록 ───────────────────────────────
+
+void AEternalReturnCharacter::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+}
+
+void AEternalReturnCharacter::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AEternalReturnCharacter, MaxSP);
+    DOREPLIFETIME(AEternalReturnCharacter, CurrentSP);
+    DOREPLIFETIME(AEternalReturnCharacter, SPRegen);
+    DOREPLIFETIME(AEternalReturnCharacter, SkillAmplification);
+    DOREPLIFETIME(AEternalReturnCharacter, CooldownReduction);
+    DOREPLIFETIME(AEternalReturnCharacter, BasicAttackBonus);
+    DOREPLIFETIME(AEternalReturnCharacter, DamageReduction);
+    DOREPLIFETIME(AEternalReturnCharacter, CriticalChance);
+    DOREPLIFETIME(AEternalReturnCharacter, CriticalDamage);
+    DOREPLIFETIME(AEternalReturnCharacter, Gold);
+    DOREPLIFETIME(AEternalReturnCharacter, Experience);
+    DOREPLIFETIME(AEternalReturnCharacter, bIsResting);
+}
+
+// ─── 리플리케이션 콜백 ──────────────────────────────
+
+void AEternalReturnCharacter::OnRep_CurrentSP()
+{
+    // 클라이언트에서 SP 변경 시 처리
+    // 예: SP 바 UI 업데이트 → 나중에 추가
+}
+
+
+void AEternalReturnCharacter::OnRep_IsResting()
+{
+    // 휴식 상태 변경 시 처리
+    // 예: 휴식 애니메이션 → 나중에 추가
+}
