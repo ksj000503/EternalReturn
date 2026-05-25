@@ -44,10 +44,11 @@
 ---
 
 ## 실행 방법
-1.프로젝트 클론 \n
-2.EternalReturn.uproject 우클릭 → Generate Visual Studio project files \n
-3.Visual Studio에서 빌드 (Ctrl + Shift + B) \n
-4.언리얼 에디터 실행 \n
+
+1. 프로젝트 클론
+2. EternalReturn.uproject 우클릭 → Generate Visual Studio project files
+3. Visual Studio에서 빌드 (Ctrl + Shift + B)
+4. 언리얼 에디터 실행
 
 ---
 
