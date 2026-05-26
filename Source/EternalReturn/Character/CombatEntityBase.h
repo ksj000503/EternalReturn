@@ -71,10 +71,8 @@ protected:
 public:
     // ─── 데미지 ─────────────────────────────────────
 
-    virtual float TakeDamage(float DamageAmount,
-        struct FDamageEvent const& DamageEvent,
-        AController* EventInstigator,
-        AActor* DamageCauser) override;
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        AController* EventInstigator, AActor* DamageCauser) override;
 
     // ─── 상태이상 ────────────────────────────────────
 

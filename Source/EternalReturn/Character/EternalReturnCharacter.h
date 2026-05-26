@@ -95,13 +95,18 @@ public:
 
     // 式式式 蘋詭塭 Getter 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
-    UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
-    USpringArmComponent* GetCameraBoom()           const { return CameraBoom.Get(); }
+    UCameraComponent* GetTopDownCameraComponent() const 
+    { 
+        return TopDownCameraComponent.Get(); 
+    }
+    USpringArmComponent* GetCameraBoom() const 
+    { 
+        return CameraBoom.Get(); 
+    }
 
 
     virtual void Tick(float DeltaSeconds) override;
 
 protected:
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
