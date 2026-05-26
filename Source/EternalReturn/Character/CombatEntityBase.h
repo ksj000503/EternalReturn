@@ -99,4 +99,26 @@ public:
 protected:
     virtual void GetLifetimeReplicatedProps(
         TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+    UFUNCTION(BlueprintCallable)
+    void SetMaxHP(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetHPRegen(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetAttackPower(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetDefense(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetMoveSpeed(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetAttackSpeed(float value);
+
+    UFUNCTION(BlueprintCallable)
+    void SetAttackRange(float value);
 };

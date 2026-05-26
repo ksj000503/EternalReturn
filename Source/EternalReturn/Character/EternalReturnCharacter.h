@@ -29,14 +29,6 @@ private:
 protected:
     // ─── 캐릭터 전용 스탯 ───────────────────────────
 
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
-    float MaxSP;
-
-    UPROPERTY(ReplicatedUsing = OnRep_CurrentSP, BlueprintReadOnly, Category = "Stats")
-    float CurrentSP;
-
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
-    float SPRegen;
 
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
     float SkillAmplification;
@@ -72,9 +64,6 @@ protected:
     // ─── 리플리케이션 콜백 ──────────────────────────
 
     UFUNCTION()
-    void OnRep_CurrentSP();
-
-    UFUNCTION()
     void OnRep_IsResting();
 
 public:
@@ -84,11 +73,6 @@ public:
 
     // ─── Getter ─────────────────────────────────────
 
-    UFUNCTION(BlueprintPure, Category = "Stats")
-    float GetCurrentSP() const { return CurrentSP; }
-
-    UFUNCTION(BlueprintPure, Category = "Stats")
-    float GetMaxSP() const { return MaxSP; }
 
     UFUNCTION(BlueprintPure, Category = "Stats")
     bool IsResting() const { return bIsResting; }

@@ -1,5 +1,7 @@
 #include "CombatEntityBase.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
 
 ACombatEntityBase::ACombatEntityBase()
 {
@@ -43,6 +45,50 @@ void ACombatEntityBase::GetLifetimeReplicatedProps(
     DOREPLIFETIME(ACombatEntityBase, AttackRange);
     DOREPLIFETIME(ACombatEntityBase, bIsDead);
     DOREPLIFETIME(ACombatEntityBase, ActiveStatusEffects);  // ← 추가
+}
+
+void ACombatEntityBase::SetMaxHP(float value)
+{
+    if (!HasAuthority()) return;
+    MaxHP = value;
+}
+
+void ACombatEntityBase::SetHPRegen(float value)
+{
+    if (!HasAuthority()) return;
+    HPRegen = value;
+}
+
+void ACombatEntityBase::SetAttackPower(float value)
+{
+    if (!HasAuthority()) return;
+    AttackPower = value;
+}
+
+void ACombatEntityBase::SetDefense(float value)
+{
+    if (!HasAuthority()) return;
+    Defense = value;
+}
+
+void ACombatEntityBase::SetMoveSpeed(float value)
+{
+    if (!HasAuthority()) return;
+    MoveSpeed = value;
+    GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+}
+
+
+void ACombatEntityBase::SetAttackSpeed(float value)
+{
+    if (!HasAuthority()) return;
+    AttackSpeed = value;
+}
+
+void ACombatEntityBase::SetAttackRange(float value)
+{
+    if (!HasAuthority()) return;
+    AttackRange = value;
 }
 
 // ─── 데미지 처리 ────────────────────────────────────

@@ -29,9 +29,6 @@ AEternalReturnCharacter::AEternalReturnCharacter()
 
     // ─── 캐릭터 전용 스탯 초기값 ────────────────────
 
-    MaxSP = 100.f;
-    CurrentSP = 100.f;
-    SPRegen = 1.f;
     SkillAmplification = 0.f;
     CooldownReduction = 0.f;
     BasicAttackBonus = 0.f;
@@ -66,9 +63,6 @@ void AEternalReturnCharacter::GetLifetimeReplicatedProps(
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AEternalReturnCharacter, MaxSP);
-    DOREPLIFETIME(AEternalReturnCharacter, CurrentSP);
-    DOREPLIFETIME(AEternalReturnCharacter, SPRegen);
     DOREPLIFETIME(AEternalReturnCharacter, SkillAmplification);
     DOREPLIFETIME(AEternalReturnCharacter, CooldownReduction);
     DOREPLIFETIME(AEternalReturnCharacter, BasicAttackBonus);
@@ -81,13 +75,6 @@ void AEternalReturnCharacter::GetLifetimeReplicatedProps(
 }
 
 // ─── 리플리케이션 콜백 ──────────────────────────────
-
-void AEternalReturnCharacter::OnRep_CurrentSP()
-{
-    // 클라이언트에서 SP 변경 시 처리
-    // 예: SP 바 UI 업데이트 → 나중에 추가
-}
-
 
 void AEternalReturnCharacter::OnRep_IsResting()
 {
