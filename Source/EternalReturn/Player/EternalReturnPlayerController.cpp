@@ -11,8 +11,16 @@
 #include "EternalReturn.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
+#include "CombatEntityBase.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+
+void AEternalReturnPlayerController::StopPathFollowing()
+{
+    bIsFollowingPath = false;
+    CurrentPath.Empty();
+    
+}
 
 AEternalReturnPlayerController::AEternalReturnPlayerController()
 {
@@ -83,6 +91,7 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
     }
 }
 
+
 void AEternalReturnPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
@@ -117,7 +126,10 @@ void AEternalReturnPlayerController::OnSetDestinationTriggered()
 
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    RequestMoveTo(CachedDestination);
+    if (TargetActor == nullptr)  // 타겟이 없을 때만 이동
+    {
+        RequestMoveTo(CachedDestination);
+    }
     FollowTime = 0.f;
 }
 
@@ -127,5 +139,23 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
     if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit))
     {
         CachedDestination = Hit.Location;
+
+        // 적 감지
+        if (AActor* HitActor = Hit.GetActor())
+        {
+            if (HitActor != GetPawn())
+            {
+                if (HitActor->IsA<ACombatEntityBase>())
+                {
+                    TargetActor = HitActor;
+                    OnEnemyClicked(HitActor);
+                    CachedDestination = HitActor->GetActorLocation(); // ← 추가
+                    RequestMoveTo(CachedDestination);                  // ← 추가
+                    return;
+                }
+            }
+        }
+        // 땅 클릭 시 타겟 초기화
+        TargetActor = nullptr;
     }
 }

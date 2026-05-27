@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "ERTypes.h"
+#include "Components/SphereComponent.h"
 #include "CombatEntityBase.generated.h"
 
 UCLASS()
@@ -40,8 +41,11 @@ protected:
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
     float AttackSpeed;
 
-    UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
-    float AttackRange;
+    UPROPERTY(ReplicatedUsing = OnRep_AttackRange, BlueprintReadOnly, Category = "Stats")
+    float AttackRange;;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+    TObjectPtr<USphereComponent> AttackRangeSphere;
 
     // 式式式 鼻鷓 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
@@ -55,6 +59,9 @@ protected:
 
     UFUNCTION()
     virtual void OnRep_CurrentHP();
+
+    UFUNCTION()
+    void OnRep_AttackRange();
 
     UFUNCTION()
     virtual void OnRep_IsDead();
@@ -95,6 +102,9 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Stats")
     bool IsDead() const { return bIsDead; }
+
+    UPROPERTY(BlueprintReadWrite, Category = "Combat")
+    TObjectPtr<AActor> TargetActor;
 
 protected:
     virtual void GetLifetimeReplicatedProps(

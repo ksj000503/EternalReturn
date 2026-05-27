@@ -30,6 +30,8 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> SetDestinationClickAction;
 
+    
+
     FVector CachedDestination;
     float FollowTime = 0.f;
 
@@ -54,4 +56,16 @@ protected:
     void UpdateCachedDestination();
 
     void RequestMoveTo(FVector Destination);
+
+public:
+    UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+    void OnEnemyClicked(AActor* EnemyActor);
+
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void StopPathFollowing();
+
+    UPROPERTY(BlueprintReadWrite, Category = "Combat")
+    TObjectPtr<AActor> TargetActor;
+
+    
 };

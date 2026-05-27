@@ -21,6 +21,13 @@ ACombatEntityBase::ACombatEntityBase()
     AttackRange = 150.f;
 
     bIsDead = false;
+
+    AttackRangeSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRangeSphere"));
+    AttackRangeSphere->SetupAttachment(RootComponent);
+    AttackRangeSphere->SetSphereRadius(AttackRange);
+    AttackRangeSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    AttackRangeSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+    AttackRangeSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 }
 
 void ACombatEntityBase::BeginPlay()
@@ -89,6 +96,10 @@ void ACombatEntityBase::SetAttackRange(float value)
 {
     if (!HasAuthority()) return;
     AttackRange = value;
+    if (AttackRangeSphere)
+    {
+        AttackRangeSphere->SetSphereRadius(value);
+    }
 }
 
 // ─── 데미지 처리 ────────────────────────────────────
@@ -101,6 +112,11 @@ float ACombatEntityBase::TakeDamage(float DamageAmount,
     if (!HasAuthority()) return 0.f;
     if (bIsDead) return 0.f;
 
+    if (!IsPlayerControlled())
+    {
+        TargetActor = DamageCauser;
+    }
+
     float ActualDamage = DamageAmount * (100.f / (100.f + Defense));
     ActualDamage = FMath::Max(1.f, ActualDamage);
 
@@ -111,7 +127,7 @@ float ACombatEntityBase::TakeDamage(float DamageAmount,
         bIsDead = true;
         OnDeath();
     }
-
+    
     return ActualDamage;
 }
 
@@ -147,6 +163,14 @@ void ACombatEntityBase::OnRep_CurrentHP()
 {
     // 클라이언트 HP 변경 시 처리
     // 예: HP 바 UI 업데이트 → 나중에 추가
+}
+
+void ACombatEntityBase::OnRep_AttackRange()
+{
+    if (AttackRangeSphere)
+    {
+        AttackRangeSphere->SetSphereRadius(AttackRange);
+    }
 }
 
 void ACombatEntityBase::OnRep_IsDead()
