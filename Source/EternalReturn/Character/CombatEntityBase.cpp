@@ -1,12 +1,11 @@
 #include "CombatEntityBase.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "Components/CapsuleComponent.h"
 
 ACombatEntityBase::ACombatEntityBase()
 {
-    PrimaryActorTick.bCanEverTick = true;
-
+    PrimaryActorTick.bCanEverTick = false;
     bReplicates = true;
 
     // ─── 기본 스탯 초기값 ────────────────────────────
@@ -19,8 +18,13 @@ ACombatEntityBase::ACombatEntityBase()
     MoveSpeed = 350.f;
     AttackSpeed = 1.f;
     AttackRange = 150.f;
-
     bIsDead = false;
+
+
+    // 커서 클릭 감지를 위해 캡슐에 Visibility 채널 Block 설정
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+    // ─── 공격 사거리 콜라이더 ────────────────────────
 
     AttackRangeSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRangeSphere"));
     AttackRangeSphere->SetupAttachment(RootComponent);
@@ -51,8 +55,10 @@ void ACombatEntityBase::GetLifetimeReplicatedProps(
     DOREPLIFETIME(ACombatEntityBase, AttackSpeed);
     DOREPLIFETIME(ACombatEntityBase, AttackRange);
     DOREPLIFETIME(ACombatEntityBase, bIsDead);
-    DOREPLIFETIME(ACombatEntityBase, ActiveStatusEffects);  // ← 추가
+    DOREPLIFETIME(ACombatEntityBase, ActiveStatusEffects);
 }
+
+// ─── Setter (서버 전용) ──────────────────────────────
 
 void ACombatEntityBase::SetMaxHP(float value)
 {
@@ -85,7 +91,6 @@ void ACombatEntityBase::SetMoveSpeed(float value)
     GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 }
 
-
 void ACombatEntityBase::SetAttackSpeed(float value)
 {
     if (!HasAuthority()) return;
@@ -110,13 +115,15 @@ float ACombatEntityBase::TakeDamage(float DamageAmount,
     AActor* DamageCauser)
 {
     if (!HasAuthority()) return 0.f;
-    if (bIsDead) return 0.f;
+    if (bIsDead)         return 0.f;
 
+    // 몬스터는 공격받으면 공격자를 타겟으로 설정
     if (!IsPlayerControlled())
     {
         TargetActor = DamageCauser;
     }
 
+    // 방어력 공식: 실제 피해 = 데미지 * 100 / (100 + 방어력)
     float ActualDamage = DamageAmount * (100.f / (100.f + Defense));
     ActualDamage = FMath::Max(1.f, ActualDamage);
 
@@ -127,7 +134,7 @@ float ACombatEntityBase::TakeDamage(float DamageAmount,
         bIsDead = true;
         OnDeath();
     }
-    
+
     return ActualDamage;
 }
 
@@ -138,7 +145,6 @@ void ACombatEntityBase::ApplyStatusEffect(EStatusEffect Effect)
     if (!HasAuthority()) return;
     if (Effect == EStatusEffect::None) return;
 
-    // 중복 적용 방지
     if (!ActiveStatusEffects.Contains(Effect))
     {
         ActiveStatusEffects.Add(Effect);
@@ -148,7 +154,6 @@ void ACombatEntityBase::ApplyStatusEffect(EStatusEffect Effect)
 void ACombatEntityBase::RemoveStatusEffect(EStatusEffect Effect)
 {
     if (!HasAuthority()) return;
-
     ActiveStatusEffects.Remove(Effect);
 }
 
@@ -161,12 +166,12 @@ bool ACombatEntityBase::HasStatusEffect(EStatusEffect Effect) const
 
 void ACombatEntityBase::OnRep_CurrentHP()
 {
-    // 클라이언트 HP 변경 시 처리
-    // 예: HP 바 UI 업데이트 → 나중에 추가
+    // HP 변경 시 클라이언트 처리 (HP바 UI 업데이트 등 - 추후 추가)
 }
 
 void ACombatEntityBase::OnRep_AttackRange()
 {
+    // 클라이언트 Sphere 반지름 동기화
     if (AttackRangeSphere)
     {
         AttackRangeSphere->SetSphereRadius(AttackRange);
@@ -183,14 +188,12 @@ void ACombatEntityBase::OnRep_IsDead()
 
 void ACombatEntityBase::OnRep_ActiveStatusEffects()
 {
-    // 클라이언트에서 상태이상 변경 시 처리
-    // 예: 상태이상 아이콘 UI, 이펙트 → 나중에 추가
+    // 상태이상 변경 시 클라이언트 처리 (UI, 이펙트 등 - 추후 추가)
 }
 
 // ─── 사망 처리 ──────────────────────────────────────
 
 void ACombatEntityBase::OnDeath_Implementation()
 {
-    // 각 BP에서 재정의
-    // 사망 애니메이션, 이펙트 등 추가
+    // 각 BP에서 재정의하여 사망 애니메이션, 이펙트 처리
 }

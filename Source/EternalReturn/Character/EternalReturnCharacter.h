@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,25 +8,27 @@ class UCameraComponent;
 class USpringArmComponent;
 
 /**
- *  A controllable top-down perspective character
+ * 플레이어 캐릭터 베이스 클래스
+ * 카메라, 캐릭터 전용 스탯, 재화, 상태 관리
  */
 UCLASS(abstract)
-class AEternalReturnCharacter : public ACombatEntityBase
+class ETERNALRETURN_API AEternalReturnCharacter : public ACombatEntityBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
     // ─── 카메라 ─────────────────────────────────────
 
+    /** 탑다운 카메라 */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> TopDownCameraComponent;
 
+    /** 카메라 거리/각도 조절용 스프링암 */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<USpringArmComponent> CameraBoom;
 
 protected:
     // ─── 캐릭터 전용 스탯 ───────────────────────────
-
 
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
     float SkillAmplification;
@@ -48,7 +48,7 @@ protected:
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
     float CriticalDamage;
 
-    // ─── 캐릭터 전용 재화 ───────────────────────────
+    // ─── 재화 ───────────────────────────────────────
 
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
     int32 Gold;
@@ -56,12 +56,10 @@ protected:
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
     int32 Experience;
 
-    // ─── 캐릭터 전용 상태 ───────────────────────────
+    // ─── 상태 ───────────────────────────────────────
 
     UPROPERTY(ReplicatedUsing = OnRep_IsResting, BlueprintReadOnly, Category = "State")
     bool bIsResting;
-
-    // ─── 리플리케이션 콜백 ──────────────────────────
 
     UFUNCTION()
     void OnRep_IsResting();
@@ -69,28 +67,15 @@ protected:
 public:
     AEternalReturnCharacter();
 
-    virtual void BeginPlay() override;
-
     // ─── Getter ─────────────────────────────────────
-
 
     UFUNCTION(BlueprintPure, Category = "Stats")
     bool IsResting() const { return bIsResting; }
 
-    // ─── 카메라 Getter ───────────────────────────────
-
-    UCameraComponent* GetTopDownCameraComponent() const 
-    { 
-        return TopDownCameraComponent.Get(); 
-    }
-    USpringArmComponent* GetCameraBoom() const 
-    { 
-        return CameraBoom.Get(); 
-    }
-
-
-    virtual void Tick(float DeltaSeconds) override;
+    UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
+    USpringArmComponent* GetCameraBoom()             const { return CameraBoom.Get(); }
 
 protected:
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual void GetLifetimeReplicatedProps(
+        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

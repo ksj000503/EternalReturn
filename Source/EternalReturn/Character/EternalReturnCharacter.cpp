@@ -19,22 +19,21 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
     TopDownCameraComponent->bUsePawnControlRotation = false;
 
-
+    // 이동 방향으로 캐릭터 자동 회전
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
-
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
 
-    // ─── 캐릭터 전용 스탯 초기값 ────────────────────
+    // ─── 스탯 초기값 ─────────────────────────────────
 
     SkillAmplification = 0.f;
     CooldownReduction = 0.f;
     BasicAttackBonus = 0.f;
     DamageReduction = 0.f;
     CriticalChance = 0.f;
-    CriticalDamage = 150.f;  // 기본 치명타 피해 150%
+    CriticalDamage = 150.f;
 
     // ─── 재화 초기값 ─────────────────────────────────
 
@@ -46,17 +45,7 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     bIsResting = false;
 }
 
-void AEternalReturnCharacter::BeginPlay()
-{
-    Super::BeginPlay();
-}
-
 // ─── 리플리케이션 등록 ───────────────────────────────
-
-void AEternalReturnCharacter::Tick(float DeltaSeconds)
-{
-    Super::Tick(DeltaSeconds);
-}
 
 void AEternalReturnCharacter::GetLifetimeReplicatedProps(
     TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -78,6 +67,5 @@ void AEternalReturnCharacter::GetLifetimeReplicatedProps(
 
 void AEternalReturnCharacter::OnRep_IsResting()
 {
-    // 휴식 상태 변경 시 처리
-    // 예: 휴식 애니메이션 → 나중에 추가
+    // 휴식 상태 변경 시 처리 (휴식 애니메이션 등 - 추후 추가)
 }

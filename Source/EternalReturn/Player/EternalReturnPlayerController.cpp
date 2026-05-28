@@ -4,7 +4,6 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
-#include "Navigation/PathFollowingComponent.h"
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -12,34 +11,26 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
+#include "GameFramework/MovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-void AEternalReturnPlayerController::StopPathFollowing()
-{
-    bIsFollowingPath = false;
-    CurrentPath.Empty();
-    
-}
-
 AEternalReturnPlayerController::AEternalReturnPlayerController()
 {
-    PathFollowingComponent = CreateDefaultSubobject<UPathFollowingComponent>(TEXT("PathFollowingComponent"));
-
     bShowMouseCursor = true;
     DefaultMouseCursor = EMouseCursor::Default;
     CachedDestination = FVector::ZeroVector;
-    FollowTime = 0.f;
 
     PrimaryActorTick.bCanEverTick = true;
 }
+
+// ─── 이동 처리 (Tick) ────────────────────────────────
 
 void AEternalReturnPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (!bIsFollowingPath) return;
-    if (CurrentPath.Num() == 0) return;
+    if (!bIsFollowingPath || CurrentPath.Num() == 0) return;
 
     APawn* ControlledPawn = GetPawn();
     if (!ControlledPawn) return;
@@ -48,14 +39,12 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
     FVector NextPoint = CurrentPath[CurrentPathIndex];
     NextPoint.Z = CurrentLocation.Z;
 
+    // 다음 웨이포인트 방향으로 이동 (회전/애니메이션 자동 작동)
     FVector Direction = (NextPoint - CurrentLocation).GetSafeNormal();
-    float Distance = FVector::Dist2D(CurrentLocation, NextPoint);
-
-    // AddMovementInput 으로 이동 → 회전, 애니메이션 자동 작동
     ControlledPawn->AddMovementInput(Direction, 1.f);
 
-    // 웨이포인트 도달 시 다음으로
-    if (Distance < AcceptanceRadius)
+    // 웨이포인트 도달 시 다음으로 이동
+    if (FVector::Dist2D(CurrentLocation, NextPoint) < AcceptanceRadius)
     {
         CurrentPathIndex++;
         if (CurrentPathIndex >= CurrentPath.Num())
@@ -63,6 +52,20 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
             bIsFollowingPath = false;
             CurrentPath.Empty();
         }
+    }
+}
+
+// ─── 경로 이동 ──────────────────────────────────────
+
+void AEternalReturnPlayerController::StopPathFollowing()
+{
+    bIsFollowingPath = false;
+    CurrentPath.Empty();
+
+    // 캐릭터 이동 즉시 정지
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ControlledPawn->GetMovementComponent()->StopMovementImmediately();
     }
 }
 
@@ -83,6 +86,7 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
         CurrentPathIndex = 1;
         bIsFollowingPath = true;
 
+        // 클릭 위치 이펙트 재생
         if (FXCursor)
         {
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, Destination,
@@ -91,27 +95,43 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
     }
 }
 
+void AEternalReturnPlayerController::FollowTarget(AActor* Target)
+{
+    // 대상이 없으면 무시
+    if (!Target) return;
+
+    // 대상의 현재 위치로 이동 경로 계산
+    RequestMoveTo(Target->GetActorLocation());
+}
+
+// ─── 입력 세팅 ──────────────────────────────────────
 
 void AEternalReturnPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    if (IsLocalPlayerController())
-    {
-        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-        {
-            Subsystem->AddMappingContext(DefaultMappingContext, 0);
-        }
+    if (!IsLocalPlayerController()) return;
 
-        if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-        {
-            EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnInputStarted);
-            EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AEternalReturnPlayerController::OnSetDestinationTriggered);
-            EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
-            EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
-        }
+    if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+        ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+    {
+        Subsystem->AddMappingContext(DefaultMappingContext, 0);
+    }
+
+    if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
+    {
+        EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnInputStarted);
+        EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AEternalReturnPlayerController::OnSetDestinationTriggered);
+        EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
+        EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
+    }
+    else
+    {
+        UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Enhanced Input Component를 찾을 수 없습니다."), *GetNameSafe(this));
     }
 }
+
+// ─── 입력 핸들러 ────────────────────────────────────
 
 void AEternalReturnPlayerController::OnInputStarted()
 {
@@ -120,42 +140,44 @@ void AEternalReturnPlayerController::OnInputStarted()
 
 void AEternalReturnPlayerController::OnSetDestinationTriggered()
 {
-    FollowTime += GetWorld()->GetDeltaSeconds();
+    if (TargetActor != nullptr) return;
     UpdateCachedDestination();
 }
 
+
+
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    if (TargetActor == nullptr)  // 타겟이 없을 때만 이동
+    // 타겟이 없을 때만 이동 (타겟 있으면 UpdateCachedDestination에서 이미 이동 처리됨)
+    if (TargetActor == nullptr)
     {
         RequestMoveTo(CachedDestination);
     }
-    FollowTime = 0.f;
 }
+
+// ─── 목적지 업데이트 ────────────────────────────────
 
 void AEternalReturnPlayerController::UpdateCachedDestination()
 {
     FHitResult Hit;
-    if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit))
-    {
-        CachedDestination = Hit.Location;
+    if (!GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit)) return;
 
-        // 적 감지
-        if (AActor* HitActor = Hit.GetActor())
+    CachedDestination = Hit.Location;
+
+    // 적(CombatEntityBase) 클릭 감지
+    if (AActor* HitActor = Hit.GetActor())
+    {
+        if (HitActor != GetPawn() && HitActor->IsA<ACombatEntityBase>())
         {
-            if (HitActor != GetPawn())
-            {
-                if (HitActor->IsA<ACombatEntityBase>())
-                {
-                    TargetActor = HitActor;
-                    OnEnemyClicked(HitActor);
-                    CachedDestination = HitActor->GetActorLocation(); // ← 추가
-                    RequestMoveTo(CachedDestination);                  // ← 추가
-                    return;
-                }
-            }
+            TargetActor = HitActor;
+            CachedDestination = HitActor->GetActorLocation();
+            OnEnemyClicked(HitActor);
+            RequestMoveTo(CachedDestination);
+            return;
         }
-        // 땅 클릭 시 타겟 초기화
-        TargetActor = nullptr;
     }
+
+    // 땅 클릭 시 타겟 초기화
+    TargetActor = nullptr;
+    OnGroundClicked();
 }
