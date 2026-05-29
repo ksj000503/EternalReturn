@@ -172,7 +172,6 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
             TargetActor = HitActor;
             CachedDestination = HitActor->GetActorLocation();
             OnEnemyClicked(HitActor);
-            RequestMoveTo(CachedDestination);
             return;
         }
     }
