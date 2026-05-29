@@ -64,6 +64,9 @@ protected:
     UFUNCTION()
     void OnRep_IsResting();
 
+    virtual void GetLifetimeReplicatedProps(
+        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
     AEternalReturnCharacter();
 
@@ -74,8 +77,4 @@ public:
 
     UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
     USpringArmComponent* GetCameraBoom()             const { return CameraBoom.Get(); }
-
-protected:
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

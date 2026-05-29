@@ -20,7 +20,6 @@ ACombatEntityBase::ACombatEntityBase()
     AttackRange = 150.f;
     bIsDead = false;
 
-
     // 커서 클릭 감지를 위해 캡슐에 Visibility 채널 Block 설정
     GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
@@ -32,11 +31,6 @@ ACombatEntityBase::ACombatEntityBase()
     AttackRangeSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     AttackRangeSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
     AttackRangeSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-}
-
-void ACombatEntityBase::BeginPlay()
-{
-    Super::BeginPlay();
 }
 
 // ─── 리플리케이션 등록 ───────────────────────────────

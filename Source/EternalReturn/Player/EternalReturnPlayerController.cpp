@@ -11,7 +11,7 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
-#include "GameFramework/MovementComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -43,7 +43,7 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
     FVector Direction = (NextPoint - CurrentLocation).GetSafeNormal();
     ControlledPawn->AddMovementInput(Direction, 1.f);
 
-    // 웨이포인트 도달 시 다음으로 이동
+    // 웨이포인트 도달 시 다음 포인트로 이동
     if (FVector::Dist2D(CurrentLocation, NextPoint) < AcceptanceRadius)
     {
         CurrentPathIndex++;
@@ -135,20 +135,20 @@ void AEternalReturnPlayerController::SetupInputComponent()
 
 void AEternalReturnPlayerController::OnInputStarted()
 {
+    // 클릭 시작 시 목적지/타겟 감지
     UpdateCachedDestination();
 }
 
 void AEternalReturnPlayerController::OnSetDestinationTriggered()
 {
+    // 타겟이 있으면 무시, 땅 드래그 이동만 처리
     if (TargetActor != nullptr) return;
     UpdateCachedDestination();
 }
 
-
-
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    // 타겟이 없을 때만 이동 (타겟 있으면 UpdateCachedDestination에서 이미 이동 처리됨)
+    // 타겟이 없을 때만 이동 (타겟 있으면 UpdateCachedDestination에서 이미 처리됨)
     if (TargetActor == nullptr)
     {
         RequestMoveTo(CachedDestination);
@@ -177,7 +177,7 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
         }
     }
 
-    // 땅 클릭 시 타겟 초기화
+    // 땅 클릭 시 타겟 초기화 및 BP에 알림
     TargetActor = nullptr;
     OnGroundClicked();
 }

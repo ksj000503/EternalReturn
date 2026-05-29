@@ -67,7 +67,7 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
     void OnGroundClicked();
 
-    /** 경로 이동 강제 중단 */
+    /** 경로 이동 강제 중단 및 캐릭터 즉시 정지 */
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void StopPathFollowing();
 
@@ -94,6 +94,6 @@ protected:
 
     // ─── 이동 유틸 ──────────────────────────────────
 
-    /** 커서 아래 위치 업데이트. 적 감지 시 OnEnemyClicked 호출 */
+    /** 커서 아래 위치 업데이트. 적 감지 시 OnEnemyClicked, 땅 클릭 시 OnGroundClicked 호출 */
     void UpdateCachedDestination();
 };

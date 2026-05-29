@@ -19,8 +19,6 @@ public:
     ACombatEntityBase();
 
 protected:
-    virtual void BeginPlay() override;
-
     // 式式式 蝶囌 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Stats")
@@ -75,6 +73,9 @@ protected:
     void OnDeath();
     virtual void OnDeath_Implementation();
 
+    virtual void GetLifetimeReplicatedProps(
+        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
     // 式式式 瞪癱 渠鼻 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
@@ -114,8 +115,4 @@ public:
     UFUNCTION(BlueprintPure, Category = "Stats") float GetCurrentHP() const { return CurrentHP; }
     UFUNCTION(BlueprintPure, Category = "Stats") float GetMaxHP()     const { return MaxHP; }
     UFUNCTION(BlueprintPure, Category = "Stats") bool  IsDead()       const { return bIsDead; }
-
-protected:
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
