@@ -12,7 +12,6 @@
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
 #include "GameFramework/PawnMovementComponent.h"
-#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -26,6 +25,10 @@ AEternalReturnPlayerController::AEternalReturnPlayerController()
 }
 
 // ─── 이동 처리 (Tick) ────────────────────────────────
+// Dedicated Server 구조:
+//   서버 인스턴스: 경로 계산 + AddMovementInput 실행 → 실제 캐릭터 이동
+//   클라이언트 인스턴스: 서버와 동일한 경로를 가지고 AddMovementInput 실행
+//   → 클라이언트 예측 이동 (서버 보정으로 최종 위치 동기화)
 
 void AEternalReturnPlayerController::Tick(float DeltaTime)
 {
@@ -38,13 +41,13 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
 
     FVector CurrentLocation = ControlledPawn->GetActorLocation();
     FVector NextPoint = CurrentPath[CurrentPathIndex];
-    NextPoint.Z = CurrentLocation.Z;
+    NextPoint.Z = CurrentLocation.Z; // Z축 고정 (탑다운 이동)
 
-    // 다음 웨이포인트 방향으로 이동 (회전/애니메이션 자동 작동)
+    // 다음 웨이포인트 방향으로 이동
     FVector Direction = (NextPoint - CurrentLocation).GetSafeNormal();
     ControlledPawn->AddMovementInput(Direction, 1.f);
 
-    // 웨이포인트 도달 시 다음 포인트로 이동
+    // 웨이포인트 도달 시 다음 포인트로 전환
     if (FVector::Dist2D(CurrentLocation, NextPoint) < AcceptanceRadius)
     {
         CurrentPathIndex++;
@@ -56,19 +59,37 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
     }
 }
 
-// ─── 경로 이동 ──────────────────────────────────────
+// ─── 이동 중단 ──────────────────────────────────────
 
 void AEternalReturnPlayerController::StopPathFollowing()
 {
     bIsFollowingPath = false;
     CurrentPath.Empty();
 
-    // 캐릭터 이동 즉시 정지
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ControlledPawn->GetMovementComponent()->StopMovementImmediately();
+    }
+
+    // 클라이언트에게도 이동 중단 명령 전달
+    // Dedicated Server: 서버만 멈추면 클라이언트 Tick에서 계속 이동하는 문제 방지
+    Client_StopPathFollowing();
+}
+
+// Client RPC 구현
+// 클라이언트에서 실행되어 클라이언트의 bIsFollowingPath를 false로 변경
+void AEternalReturnPlayerController::Client_StopPathFollowing_Implementation()
+{
+    bIsFollowingPath = false;
+    CurrentPath.Empty();
+
     if (APawn* ControlledPawn = GetPawn())
     {
         ControlledPawn->GetMovementComponent()->StopMovementImmediately();
     }
 }
+
+// ─── 경로 이동 ──────────────────────────────────────
 
 void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
 {
@@ -90,25 +111,24 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
         // 클릭 위치 이펙트 재생
         if (FXCursor)
         {
-            UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, Destination,
-                FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::None, true);
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                this, FXCursor, Destination,
+                FRotator::ZeroRotator, FVector(1.f),
+                true, true, ENCPoolMethod::None, true);
         }
     }
 }
 
-
 void AEternalReturnPlayerController::FollowTarget(AActor* Target)
 {
-    // 대상이 없으면 무시
     if (!Target) return;
-
-    // 대상의 현재 위치로 이동 경로 계산
     RequestMoveTo(Target->GetActorLocation());
 }
 
+// ─── Server RPC 구현 ────────────────────────────────
+
 void AEternalReturnPlayerController::Server_RequestMoveTo_Implementation(FVector Destination)
 {
-    UE_LOG(LogTemplateCharacter, Warning, TEXT("Server_RequestMoveTo called"));
     RequestMoveTo(Destination);
 }
 
@@ -118,6 +138,7 @@ void AEternalReturnPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
+    // 로컬 클라이언트에서만 입력 바인딩
     if (!IsLocalPlayerController()) return;
 
     if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -135,7 +156,8 @@ void AEternalReturnPlayerController::SetupInputComponent()
     }
     else
     {
-        UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Enhanced Input Component를 찾을 수 없습니다."), *GetNameSafe(this));
+        UE_LOG(LogTemplateCharacter, Error,
+            TEXT("'%s' Enhanced Input Component를 찾을 수 없습니다."), *GetNameSafe(this));
     }
 }
 
@@ -143,31 +165,27 @@ void AEternalReturnPlayerController::SetupInputComponent()
 
 void AEternalReturnPlayerController::OnInputStarted()
 {
-    // 클릭 시작 시 목적지/타겟 감지
+    // 클릭 시작: 적/땅 감지 (1회)
     UpdateCachedDestination();
 }
 
 void AEternalReturnPlayerController::OnSetDestinationTriggered()
 {
-    // 타겟이 있으면 무시, 땅 드래그 이동만 처리
+    // 드래그 이동: 타겟 있으면 무시 (공격 중 드래그로 이동 취소 방지)
     if (TargetActor != nullptr) return;
     UpdateCachedDestination();
 }
 
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    UE_LOG(LogTemplateCharacter, Warning, TEXT("Released - HasAuthority: %d, IsLocalController: %d"), HasAuthority(), IsLocalController());
-
+    // 땅 클릭 해제: 타겟 없을 때만 이동 명령 전송
     if (TargetActor == nullptr)
     {
-        if (IsLocalController())
-        {
-            Server_RequestMoveTo(CachedDestination);
-        }
+        Server_RequestMoveTo(CachedDestination);
     }
 }
 
-// ─── 목적지 업데이트 ────────────────────────────────
+// ─── 목적지 및 타겟 감지 ────────────────────────────
 
 void AEternalReturnPlayerController::UpdateCachedDestination()
 {
@@ -177,26 +195,22 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
     CachedDestination = Hit.Location;
 
     // 적(CombatEntityBase) 클릭 감지
+    // CombatEntityBase 생성자에서 Visibility = Block으로 설정했기 때문에 Hit 가능
     if (AActor* HitActor = Hit.GetActor())
     {
         if (HitActor != GetPawn() && HitActor->IsA<ACombatEntityBase>())
         {
             TargetActor = HitActor;
             CachedDestination = HitActor->GetActorLocation();
+
+            // BP_PlayerController에서 GetPawn → Cast BP_Character → AttackTarget 호출
             OnEnemyClicked(HitActor);
             return;
         }
     }
 
-    // 땅 클릭 시 타겟 초기화 및 BP에 알림
+    // 땅 클릭: 타겟 초기화 + BP에 알림
+    // BP_PlayerController에서 GetPawn → Cast BP_Character → ClearTarget 호출
     TargetActor = nullptr;
     OnGroundClicked();
-}
-
-void AEternalReturnPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AEternalReturnPlayerController, CurrentPath);
-    DOREPLIFETIME(AEternalReturnPlayerController, CurrentPathIndex);
-    DOREPLIFETIME(AEternalReturnPlayerController, bIsFollowingPath);
 }
