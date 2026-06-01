@@ -12,6 +12,7 @@
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -95,6 +96,7 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
     }
 }
 
+
 void AEternalReturnPlayerController::FollowTarget(AActor* Target)
 {
     // 대상이 없으면 무시
@@ -102,6 +104,12 @@ void AEternalReturnPlayerController::FollowTarget(AActor* Target)
 
     // 대상의 현재 위치로 이동 경로 계산
     RequestMoveTo(Target->GetActorLocation());
+}
+
+void AEternalReturnPlayerController::Server_RequestMoveTo_Implementation(FVector Destination)
+{
+    UE_LOG(LogTemplateCharacter, Warning, TEXT("Server_RequestMoveTo called"));
+    RequestMoveTo(Destination);
 }
 
 // ─── 입력 세팅 ──────────────────────────────────────
@@ -148,10 +156,14 @@ void AEternalReturnPlayerController::OnSetDestinationTriggered()
 
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    // 타겟이 없을 때만 이동 (타겟 있으면 UpdateCachedDestination에서 이미 처리됨)
+    UE_LOG(LogTemplateCharacter, Warning, TEXT("Released - HasAuthority: %d, IsLocalController: %d"), HasAuthority(), IsLocalController());
+
     if (TargetActor == nullptr)
     {
-        RequestMoveTo(CachedDestination);
+        if (IsLocalController())
+        {
+            Server_RequestMoveTo(CachedDestination);
+        }
     }
 }
 
@@ -179,4 +191,12 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
     // 땅 클릭 시 타겟 초기화 및 BP에 알림
     TargetActor = nullptr;
     OnGroundClicked();
+}
+
+void AEternalReturnPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AEternalReturnPlayerController, CurrentPath);
+    DOREPLIFETIME(AEternalReturnPlayerController, CurrentPathIndex);
+    DOREPLIFETIME(AEternalReturnPlayerController, bIsFollowingPath);
 }

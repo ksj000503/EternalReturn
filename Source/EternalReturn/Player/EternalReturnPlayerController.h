@@ -41,12 +41,15 @@ protected:
     FVector CachedDestination;
 
     /** NavMesh로 계산된 경로 웨이포인트 목록 */
+    UPROPERTY(Replicated)
     TArray<FVector> CurrentPath;
 
     /** 현재 이동 중인 웨이포인트 인덱스 */
+    UPROPERTY(Replicated)
     int32 CurrentPathIndex = 0;
 
     /** 경로 이동 중 여부 */
+    UPROPERTY(Replicated)
     bool bIsFollowingPath = false;
 
     /** 웨이포인트 도달 판정 거리 */
@@ -78,6 +81,10 @@ public:
     /** 특정 액터를 향해 이동 (추격) */
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void FollowTarget(AActor* Target);
+
+    UFUNCTION(Server, Reliable)
+    void Server_RequestMoveTo(FVector Destination);
+
 
     /** 현재 공격 대상 */
     UPROPERTY(BlueprintReadWrite, Category = "Combat")
