@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "ERTypes.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "CombatEntityBase.generated.h"
 
 /**
@@ -103,6 +104,11 @@ protected:
     // BP의 BeginOverlap/EndOverlap 이벤트가 이 컴포넌트에 바인딩됨
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
     TObjectPtr<USphereComponent> AttackRangeSphere;
+
+    // HP바 위젯 컴포넌트 (머리 위 World Space)
+    // BP_Character, BP_MonsterBase 모두 공통 사용
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+    TObjectPtr<UWidgetComponent> HPBarWidget;
 
     // ─── 상태 ───────────────────────────────────────
     // OnRep_IsDead: 클라이언트에서 사망 연출 처리

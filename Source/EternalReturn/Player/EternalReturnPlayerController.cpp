@@ -34,6 +34,10 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // 서버: 실제 캐릭터 이동 처리
+    // 로컬 클라이언트: 예측 이동 처리 (서버 보정으로 최종 위치 동기화)
+    // 다른 클라이언트 인스턴스는 제외 (자신의 캐릭터만 처리)
+    if (!HasAuthority() && !IsLocalController()) return;
     if (!bIsFollowingPath || CurrentPath.Num() == 0) return;
 
     APawn* ControlledPawn = GetPawn();
@@ -102,13 +106,19 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
     UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
         GetWorld(), ControlledPawn->GetActorLocation(), Destination);
 
-    if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() > 1)
+    if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() >= 1)
     {
         CurrentPath = NavPath->PathPoints;
         CurrentPathIndex = 1;
         bIsFollowingPath = true;
 
-        // 클릭 위치 이펙트 재생
+        // 서버에서 호출된 경우 계산된 경로 배열을 클라이언트에 직접 전달
+        // 클라이언트에서 NavMesh 재계산 없이 서버 경로 그대로 사용
+        if (HasAuthority())
+        {
+            Client_StartPathFollowing(CurrentPath);
+        }
+
         if (FXCursor)
         {
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -129,7 +139,16 @@ void AEternalReturnPlayerController::FollowTarget(AActor* Target)
 
 void AEternalReturnPlayerController::Server_RequestMoveTo_Implementation(FVector Destination)
 {
+    // RequestMoveTo 내부에서 HasAuthority() 체크 후 Client_StartPathFollowing 자동 호출
     RequestMoveTo(Destination);
+}
+
+void AEternalReturnPlayerController::Client_StartPathFollowing_Implementation(const TArray<FVector>& Path)
+{
+    // 서버에서 계산한 경로를 그대로 사용 (NavMesh 재계산 없음)
+    CurrentPath = Path;
+    CurrentPathIndex = 1;
+    bIsFollowingPath = true;
 }
 
 // ─── 입력 세팅 ──────────────────────────────────────

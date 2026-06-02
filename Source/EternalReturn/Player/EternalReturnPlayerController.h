@@ -110,4 +110,9 @@ private:
     // → 이 RPC로 클라이언트 bIsFollowingPath = false 처리
     UFUNCTION(Client, Reliable)
     void Client_StopPathFollowing();
+
+    // 서버에서 계산한 경로 포인트 배열을 클라이언트에 직접 전달
+    // 클라이언트에 NavMesh가 없어도 서버 경로 그대로 사용 가능
+    UFUNCTION(Client, Reliable)
+    void Client_StartPathFollowing(const TArray<FVector>& Path);
 };

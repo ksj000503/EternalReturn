@@ -2,6 +2,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 
 ACombatEntityBase::ACombatEntityBase()
 {
@@ -32,6 +33,14 @@ ACombatEntityBase::ACombatEntityBase()
     AttackRangeSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     AttackRangeSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
     AttackRangeSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+    // ─── HP바 위젯 컴포넌트 ──────────────────────────
+    // Widget Class는 BP_Character, BP_MonsterBase에서 각각 설정
+    HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarWidget"));
+    HPBarWidget->SetupAttachment(RootComponent);
+    HPBarWidget->SetWidgetSpace(EWidgetSpace::World);
+    HPBarWidget->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+    HPBarWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // ─── 리플리케이션 등록 ───────────────────────────────
