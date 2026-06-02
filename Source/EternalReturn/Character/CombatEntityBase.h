@@ -59,6 +59,7 @@ public:
     // ─── Setter (서버 전용, HasAuthority 내부 체크) ──
     // BP의 InitializeStats 함수에서 DataTable 값을 받아 호출
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetMaxHP(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") void SetCurrentHP(float value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetHPRegen(float value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetAttackPower(float value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetDefense(float value);
@@ -124,6 +125,15 @@ protected:
     UFUNCTION(BlueprintNativeEvent, Category = "Combat")
     void OnDeath();
     virtual void OnDeath_Implementation();
+
+    // 모든 클라이언트에서 래그돌 처리
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_Ragdoll();
+
+    // ─── UI 콜백 ────────────────────────────────────
+    // BP_Character, BP_MonsterBase에서 구현하여 HP바 업데이트
+    UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+    void OnHPChanged(float InCurrentHP, float InMaxHP);
 
     // ─── 리플리케이션 콜백 ──────────────────────────
     UFUNCTION() virtual void OnRep_CurrentHP();

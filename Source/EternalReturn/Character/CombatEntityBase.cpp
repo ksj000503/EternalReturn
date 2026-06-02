@@ -71,6 +71,13 @@ void ACombatEntityBase::SetMaxHP(float value)
 {
     if (!HasAuthority()) return;
     MaxHP = value;
+    CurrentHP = value;
+}
+
+void ACombatEntityBase::SetCurrentHP(float value)
+{
+    if (!HasAuthority()) return;
+    CurrentHP = FMath::Clamp(value, 0.f, MaxHP);
 }
 
 void ACombatEntityBase::SetHPRegen(float value)
@@ -176,8 +183,9 @@ bool ACombatEntityBase::HasStatusEffect(EStatusEffect Effect) const
 
 void ACombatEntityBase::OnRep_CurrentHP()
 {
-    // 클라이언트: HP 변경 시 HP바 UI 업데이트 처리
-    // BP_Character에서 OnRep_CurrentHP를 오버라이드하여 구현
+    // 클라이언트: HP 변경 시 BP에서 구현한 OnHPChanged 호출
+    // BP_Character, BP_MonsterBase에서 HP바 UI 업데이트
+    OnHPChanged(CurrentHP, MaxHP);
 }
 
 void ACombatEntityBase::OnRep_AttackRange()
@@ -206,6 +214,30 @@ void ACombatEntityBase::OnRep_ActiveStatusEffects()
 
 void ACombatEntityBase::OnDeath_Implementation()
 {
-    // BP_Character, BP_MonsterBase에서 재정의하여
-    // 사망 애니메이션, 이펙트, 사망 후 처리 구현
+    // 서버에서 모든 클라이언트에 래그돌 전파
+    Multicast_Ragdoll();
+}
+
+void ACombatEntityBase::Multicast_Ragdoll_Implementation()
+{
+    // 메시 래그돌 활성화
+    USkeletalMeshComponent* SkelMesh = GetMesh();
+    if (SkelMesh)
+    {
+        SkelMesh->SetSimulatePhysics(true);
+        SkelMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    }
+
+    // 캡슐 콜리전 비활성화 (이동 막지 않도록)
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // 이동 중지
+    GetCharacterMovement()->DisableMovement();
+
+    // 30초 후 액터 숨김
+    FTimerHandle DestroyTimer;
+    GetWorldTimerManager().SetTimer(DestroyTimer, [this]()
+        {
+            SetActorHiddenInGame(true);
+        }, 30.f, false);
 }
