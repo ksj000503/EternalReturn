@@ -25,6 +25,8 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
 
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
     // ─── 캐릭터 전용 스탯 초기값 ─────────────────────
     SkillAmplification = 0.f;
     CooldownReduction = 0.f;

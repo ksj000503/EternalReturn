@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "CombatEntityBase.h"
+#include "InventoryComponent.h"
+
 #include "EternalReturnCharacter.generated.h"
 
 class UCameraComponent;
@@ -37,6 +39,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "State")
     bool IsResting() const { return bIsResting; }
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    EWeaponType AllowedWeaponType = EWeaponType::None;
+
     UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
     USpringArmComponent* GetCameraBoom()             const { return CameraBoom.Get(); }
 
@@ -49,6 +54,9 @@ protected:
     // 카메라 거리/각도 조절용 스프링암
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<USpringArmComponent> CameraBoom;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+    TObjectPtr<UInventoryComponent> InventoryComponent;
 
     // ─── 캐릭터 전용 스탯 ───────────────────────────
     // CombatEntityBase의 기본 스탯 외 캐릭터 전용 추가 스탯
