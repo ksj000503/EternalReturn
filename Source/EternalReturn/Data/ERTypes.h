@@ -28,7 +28,8 @@ enum class EItemType : uint8
     Chest       UMETA(DisplayName = "몸통"),
     Arm         UMETA(DisplayName = "팔"),
     Leg         UMETA(DisplayName = "신발"),
-    Food        UMETA(DisplayName = "음식")
+    Food        UMETA(DisplayName = "음식"),
+    Material    UMETA(DisplayName = "재료")
 };
 
 UENUM(BlueprintType)
@@ -83,6 +84,9 @@ struct FS_ItemStatData
     float HPRegen = 0.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float HPRegenPercent = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float AttackPower = 0.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -114,6 +118,18 @@ struct FS_ItemStatData
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float CriticalDamage = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float AdaptiveStatValue = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ArmorPenetration = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LifeSteal = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Sight = 0.f;
 };
 
 USTRUCT(BlueprintType)
