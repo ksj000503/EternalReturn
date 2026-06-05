@@ -72,6 +72,21 @@ enum class EWeaponType : uint8
     VFArm           UMETA(DisplayName = "VF의수")
 };
 
+UENUM(BlueprintType)
+enum class EMonsterType : uint8
+{
+    Chicken     UMETA(DisplayName = "닭"),
+    WildDog     UMETA(DisplayName = "들개"),
+    Boar        UMETA(DisplayName = "멧돼지"),
+    Wolf        UMETA(DisplayName = "늑대"),
+    Bear        UMETA(DisplayName = "곰"),
+    Crow        UMETA(DisplayName = "까마귀"),
+    Bat         UMETA(DisplayName = "박쥐"),
+    Alpha       UMETA(DisplayName = "알파"),
+    Wickeline   UMETA(DisplayName = "위클라인")
+};
+
+
 USTRUCT(BlueprintType)
 struct FS_ItemStatData
 {
