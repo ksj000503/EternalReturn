@@ -51,6 +51,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void StopPathFollowing();
 
+    // 구조물 클릭 시 BP에서 TargetStructure 저장 + bWantsToInteract = true + 이동 시작
+    UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
+    void OnStructureClicked(AActor* StructureActor);
+
     // NavMesh로 경로 계산 후 이동 시작 (서버에서만 유효)
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void RequestMoveTo(FVector Destination);

@@ -11,6 +11,7 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
+#include "Structure/StructureBase.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -226,6 +227,13 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
             OnEnemyClicked(HitActor);
             return;
         }
+        if (HitActor->IsA<AStructureBase>())
+        {
+            CachedDestination = HitActor->GetActorLocation();
+            OnStructureClicked(HitActor);
+            return;
+        }
+
     }
 
     // 땅 클릭: 타겟 초기화 + BP에 알림
