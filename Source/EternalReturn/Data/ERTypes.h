@@ -87,6 +87,14 @@ enum class EMonsterType : uint8
 };
 
 
+UENUM(BlueprintType)
+enum class ESpawnType : uint8
+{
+    NoSpawnMaterial     UMETA(DisplayName = "no스폰"),
+    SpawnMaterial     UMETA(DisplayName = "스폰")
+    
+};
+
 USTRUCT(BlueprintType)
 struct FS_ItemStatData
 {
@@ -159,6 +167,9 @@ struct FS_ItemData : public FTableRowBase
     EItemType ItemType;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ESpawnType SpawnType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     EWeaponType WeaponType;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -187,6 +198,15 @@ struct FInventorySlot
 
     UPROPERTY(BlueprintReadWrite)
     bool bIsEmpty = true;
+
+    UPROPERTY(BlueprintReadWrite)
+    FName ItemID;
+};
+
+USTRUCT(BlueprintType)
+struct FStructureInventory
+{
+    GENERATED_BODY()
 
     UPROPERTY(BlueprintReadWrite)
     FName ItemID;
