@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UCraftingComponent;
 
 UCLASS(abstract)
 class ETERNALRETURN_API AEternalReturnCharacter : public ACombatEntityBase
@@ -22,6 +23,14 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
     EWeaponType AllowedWeaponType = EWeaponType::None;
+
+    // 인벤토리
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+    TObjectPtr<UInventoryComponent> InventoryComponent;
+
+    // 크래프팅
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crafting")
+    TObjectPtr<UCraftingComponent> CraftingComponent;
 
     UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
     USpringArmComponent* GetCameraBoom() const { return CameraBoom.Get(); }
@@ -54,8 +63,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<USpringArmComponent> CameraBoom;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-    TObjectPtr<UInventoryComponent> InventoryComponent;
+    
 
     // ─── CharacterStatComponent ──────────────────────
     // CombatEntityBase의 StatComponent(BaseStatComponent)와 별개

@@ -1,7 +1,7 @@
 #include "InventoryComponent.h"
 #include "EternalReturnCharacter.h"
 #include "Net/UnrealNetwork.h"
-
+#include "CraftingComponent.h"
 UInventoryComponent::UInventoryComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
@@ -67,6 +67,12 @@ bool UInventoryComponent::AddItem(FName ItemID)
         }
     }
 
+    UCraftingComponent* Crafting = Cast<UCraftingComponent>(GetOwner()->GetComponentByClass(UCraftingComponent::StaticClass()));
+    if (Crafting)
+    {
+        Crafting->UpdateCraftableList();
+    }
+
     return false;
 }
 
@@ -85,6 +91,12 @@ bool UInventoryComponent::RemoveItem(FName ItemID)
             InventorySlots[i].ItemID = NAME_None;
             return true;
         }
+    }
+
+    UCraftingComponent* Crafting = Cast<UCraftingComponent>(GetOwner()->GetComponentByClass(UCraftingComponent::StaticClass()));
+    if (Crafting)
+    {
+        Crafting->UpdateCraftableList();
     }
 
     return false;

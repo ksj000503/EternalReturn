@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "CraftingComponent.h"
 
 AEternalReturnCharacter::AEternalReturnCharacter()
 {
@@ -27,6 +28,7 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     // ─── 컴포넌트 생성 ───────────────────────────────
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
     CharacterStatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("CharacterStatComponent"));
+    CraftingComponent = CreateDefaultSubobject<UCraftingComponent>(TEXT("CraftingComponent"));
 
     // ─── 재화 초기값 ─────────────────────────────────
     Gold = 0;

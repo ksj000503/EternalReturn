@@ -85,6 +85,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> SetDestinationClickAction;
 
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> CraftItemAction;
+
     // ─── 이동 데이터 (서버 전용) ────────────────────
     // Dedicated Server에서 PlayerController는 서버 + 해당 클라이언트에만 존재
     // 경로 계산은 서버에서, 클라이언트 Tick에서 AddMovementInput 실행
@@ -101,6 +104,7 @@ protected:
     void OnInputStarted();
     void OnSetDestinationTriggered();
     void OnSetDestinationReleased();
+    void OnCraftItem();
 
     // ─── 이동 유틸 ──────────────────────────────────
     // 커서 아래 위치 업데이트

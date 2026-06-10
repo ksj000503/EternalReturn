@@ -12,6 +12,8 @@
 #include "NavigationPath.h"
 #include "CombatEntityBase.h"
 #include "Structure/StructureBase.h"
+#include "EternalReturn/Character/CraftingComponent.h"
+#include "EternalReturn/Character/EternalReturnCharacter.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -173,6 +175,7 @@ void AEternalReturnPlayerController::SetupInputComponent()
         EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AEternalReturnPlayerController::OnSetDestinationTriggered);
         EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
         EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
+        EIC->BindAction(CraftItemAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCraftItem);
     }
     else
     {
@@ -202,6 +205,20 @@ void AEternalReturnPlayerController::OnSetDestinationReleased()
     if (TargetActor == nullptr)
     {
         Server_RequestMoveTo(CachedDestination);
+    }
+}
+
+void AEternalReturnPlayerController::OnCraftItem()
+{
+    APawn* ControlledPawn = GetPawn();
+    if (!ControlledPawn) return;
+
+    AEternalReturnCharacter* ERCharacter = Cast<AEternalReturnCharacter>(ControlledPawn);
+    if (!ERCharacter) return;
+
+    if (ERCharacter->CraftingComponent)
+    {
+        ERCharacter->CraftingComponent->CrateItem();
     }
 }
 
