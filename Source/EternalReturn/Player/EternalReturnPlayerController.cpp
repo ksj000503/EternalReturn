@@ -138,6 +138,12 @@ void AEternalReturnPlayerController::FollowTarget(AActor* Target)
     RequestMoveTo(Target->GetActorLocation());
 }
 
+void AEternalReturnPlayerController::AcknowledgePossession(APawn* P)
+{
+    Super::AcknowledgePossession(P);
+    OnAcknowledgePossession(P);
+}
+
 // 式式式 Server RPC 掘⑷ 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
 void AEternalReturnPlayerController::Server_RequestMoveTo_Implementation(FVector Destination)

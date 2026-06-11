@@ -75,6 +75,13 @@ public:
     TObjectPtr<AActor> TargetActor;
 
 protected:
+
+    // Chracter Ref
+    virtual void AcknowledgePossession(class APawn* P) override;
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnAcknowledgePossession(class APawn* P);
+
     // ─── 입력 에셋 ──────────────────────────────────
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UNiagaraSystem> FXCursor;

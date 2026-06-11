@@ -33,6 +33,8 @@ public:
     TObjectPtr<UCraftingComponent> CraftingComponent;
 
     UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
+    
+    UFUNCTION(BlueprintPure, Category = "Components")
     USpringArmComponent* GetCameraBoom() const { return CameraBoom.Get(); }
 
     // ─── Setter (BP의 InitializeStats에서 그대로 호출) ──
