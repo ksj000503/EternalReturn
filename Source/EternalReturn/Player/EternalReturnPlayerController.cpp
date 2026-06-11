@@ -176,6 +176,8 @@ void AEternalReturnPlayerController::SetupInputComponent()
         EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
         EIC->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AEternalReturnPlayerController::OnSetDestinationReleased);
         EIC->BindAction(CraftItemAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCraftItem);
+        EIC->BindAction(CameraLockAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCameraLockStarted);
+        EIC->BindAction(CameraLockAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnCameraLockReleased);
     }
     else
     {
@@ -221,6 +223,7 @@ void AEternalReturnPlayerController::OnCraftItem()
         ERCharacter->CraftingComponent->CrateItem();
     }
 }
+
 
 // ─── 목적지 및 타겟 감지 ────────────────────────────
 
