@@ -25,6 +25,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  * [블루프린트 연결]
  * - OnEnemyClicked → BP_PlayerController에서 GetPawn → Cast → AttackTarget 호출
  * - OnGroundClicked → BP_PlayerController에서 GetPawn → Cast → ClearTarget 호출
+ * - OnCraftingStartedBP → BP_PlayerController에서 WBP_CraftingGauge StartGauge 호출
+ * - OnCraftingCancelledBP → BP_PlayerController에서 WBP_CraftingGauge Set Visibility Hidden 호출
  */
 UCLASS(abstract)
 class ETERNALRETURN_API AEternalReturnPlayerController : public APlayerController
@@ -37,46 +39,52 @@ public:
     virtual void Tick(float DeltaTime) override;
 
     // ─── 전투 이벤트 (BP에서 구현) ──────────────────
-    // 적 클릭 시 BP에서 GetPawn → Cast BP_Character → AttackTarget 호출
     UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
     void OnEnemyClicked(AActor* EnemyActor);
 
-    // 땅 클릭 시 BP에서 GetPawn → Cast BP_Character → ClearTarget 호출
     UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
     void OnGroundClicked();
 
     // ─── 이동 함수 ──────────────────────────────────
-    // 서버에서 경로 이동 강제 중단 + Client RPC로 클라이언트도 정지
-    // BP_Character의 TryAttack에서 StopPathFollowing 호출 후 공격 시작
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void StopPathFollowing();
 
-    // 구조물 클릭 시 BP에서 TargetStructure 저장 + bWantsToInteract = true + 이동 시작
     UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
     void OnStructureClicked(AActor* StructureActor);
 
-    // NavMesh로 경로 계산 후 이동 시작 (서버에서만 유효)
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void RequestMoveTo(FVector Destination);
 
-    // 특정 액터를 향해 이동 (EndOverlap 시 자동 추격)
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void FollowTarget(AActor* Target);
 
     // ─── Server RPC ─────────────────────────────────
-    // 클라이언트 클릭 → 서버에서 경로 계산 및 이동 시작
     UFUNCTION(Server, Reliable)
     void Server_RequestMoveTo(FVector Destination);
 
     // ─── 현재 공격 대상 ─────────────────────────────
-    // UpdateCachedDestination에서 적 감지 시 Set
-    // OnSetDestinationTriggered에서 드래그 이동 무시 판단에 사용
     UPROPERTY(BlueprintReadWrite, Category = "Combat")
     TObjectPtr<AActor> TargetActor;
 
+    // ─── 크래프팅 이벤트 (BP에서 구현) ──────────────
+    // 서버에서 제작 시작 시 클라이언트에게 알림 → WBP_CraftingGauge StartGauge 호출
+    UFUNCTION(BlueprintImplementableEvent, Category = "Crafting")
+    void OnCraftingStartedBP(float CraftingTime);
+
+    // 서버에서 제작 취소 시 클라이언트에게 알림 → WBP_CraftingGauge Set Visibility Hidden 호출
+    UFUNCTION(BlueprintImplementableEvent, Category = "Crafting")
+    void OnCraftingCancelledBP();
+
+
+    // 서버에서 제작 시작 시 클라이언트에게 전달
+    UFUNCTION(Client, Reliable)
+    void Client_OnCraftingStarted(float CraftingTime);
+
+    // 서버에서 제작 취소 시 클라이언트에게 전달
+    UFUNCTION(Client, Reliable)
+    void Client_OnCraftingCancelled();
 protected:
 
-    // Chracter Ref
     virtual void AcknowledgePossession(class APawn* P) override;
 
     UFUNCTION(BlueprintImplementableEvent)
@@ -98,10 +106,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> CameraLockAction;
 
-    // ─── 이동 데이터 (서버 전용) ────────────────────
-    // Dedicated Server에서 PlayerController는 서버 + 해당 클라이언트에만 존재
-    // 경로 계산은 서버에서, 클라이언트 Tick에서 AddMovementInput 실행
-    // → 두 인스턴스가 각자 자신의 데이터를 가지므로 Replicated 불필요
+    // ─── 이동 데이터 ────────────────────────────────
     FVector          CachedDestination;
     TArray<FVector>  CurrentPath;
     int32            CurrentPathIndex = 0;
@@ -118,24 +123,19 @@ protected:
 
     UFUNCTION(BlueprintImplementableEvent)
     void OnCameraLockStarted();
+
     UFUNCTION(BlueprintImplementableEvent)
     void OnCameraLockReleased();
 
-    // ─── 이동 유틸 ──────────────────────────────────
-    // 커서 아래 위치 업데이트
-    // 적 감지 시 OnEnemyClicked, 땅 클릭 시 OnGroundClicked 호출
     void UpdateCachedDestination();
 
 private:
     // ─── Client RPC ─────────────────────────────────
-    // 서버에서 StopPathFollowing 호출 시 클라이언트에게도 정지 명령 전달
-    // Dedicated Server: 서버 Tick만 멈추면 클라이언트 Tick은 계속 이동함
-    // → 이 RPC로 클라이언트 bIsFollowingPath = false 처리
     UFUNCTION(Client, Reliable)
     void Client_StopPathFollowing();
 
-    // 서버에서 계산한 경로 포인트 배열을 클라이언트에 직접 전달
-    // 클라이언트에 NavMesh가 없어도 서버 경로 그대로 사용 가능
     UFUNCTION(Client, Reliable)
     void Client_StartPathFollowing(const TArray<FVector>& Path);
+
+   
 };

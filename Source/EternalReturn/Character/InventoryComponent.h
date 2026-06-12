@@ -7,6 +7,8 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipSlotsUpdated);
 
+class UCraftingComponent;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ETERNALRETURN_API UInventoryComponent : public UActorComponent
 {
@@ -56,4 +58,8 @@ public:
     FOnEquipSlotsUpdated OnEquipSlotsUpdated;
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+private:
+    // CraftingComponent ÇïÆÛ ÇÔ¼ö
+    UCraftingComponent* GetCraftingComponent();
 };

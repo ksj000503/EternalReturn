@@ -23,23 +23,15 @@ AEternalReturnPlayerController::AEternalReturnPlayerController()
     bShowMouseCursor = true;
     DefaultMouseCursor = EMouseCursor::Default;
     CachedDestination = FVector::ZeroVector;
-
     PrimaryActorTick.bCanEverTick = true;
 }
 
 // ─── 이동 처리 (Tick) ────────────────────────────────
-// Dedicated Server 구조:
-//   서버 인스턴스: 경로 계산 + AddMovementInput 실행 → 실제 캐릭터 이동
-//   클라이언트 인스턴스: 서버와 동일한 경로를 가지고 AddMovementInput 실행
-//   → 클라이언트 예측 이동 (서버 보정으로 최종 위치 동기화)
 
 void AEternalReturnPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // 서버: 실제 캐릭터 이동 처리
-    // 로컬 클라이언트: 예측 이동 처리 (서버 보정으로 최종 위치 동기화)
-    // 다른 클라이언트 인스턴스는 제외 (자신의 캐릭터만 처리)
     if (!HasAuthority() && !IsLocalController()) return;
     if (!bIsFollowingPath || CurrentPath.Num() == 0) return;
 
@@ -48,13 +40,11 @@ void AEternalReturnPlayerController::Tick(float DeltaTime)
 
     FVector CurrentLocation = ControlledPawn->GetActorLocation();
     FVector NextPoint = CurrentPath[CurrentPathIndex];
-    NextPoint.Z = CurrentLocation.Z; // Z축 고정 (탑다운 이동)
+    NextPoint.Z = CurrentLocation.Z;
 
-    // 다음 웨이포인트 방향으로 이동
     FVector Direction = (NextPoint - CurrentLocation).GetSafeNormal();
     ControlledPawn->AddMovementInput(Direction, 1.f);
 
-    // 웨이포인트 도달 시 다음 포인트로 전환
     if (FVector::Dist2D(CurrentLocation, NextPoint) < AcceptanceRadius)
     {
         CurrentPathIndex++;
@@ -78,13 +68,9 @@ void AEternalReturnPlayerController::StopPathFollowing()
         ControlledPawn->GetMovementComponent()->StopMovementImmediately();
     }
 
-    // 클라이언트에게도 이동 중단 명령 전달
-    // Dedicated Server: 서버만 멈추면 클라이언트 Tick에서 계속 이동하는 문제 방지
     Client_StopPathFollowing();
 }
 
-// Client RPC 구현
-// 클라이언트에서 실행되어 클라이언트의 bIsFollowingPath를 false로 변경
 void AEternalReturnPlayerController::Client_StopPathFollowing_Implementation()
 {
     bIsFollowingPath = false;
@@ -115,8 +101,6 @@ void AEternalReturnPlayerController::RequestMoveTo(FVector Destination)
         CurrentPathIndex = 1;
         bIsFollowingPath = true;
 
-        // 서버에서 호출된 경우 계산된 경로 배열을 클라이언트에 직접 전달
-        // 클라이언트에서 NavMesh 재계산 없이 서버 경로 그대로 사용
         if (HasAuthority())
         {
             Client_StartPathFollowing(CurrentPath);
@@ -148,16 +132,28 @@ void AEternalReturnPlayerController::AcknowledgePossession(APawn* P)
 
 void AEternalReturnPlayerController::Server_RequestMoveTo_Implementation(FVector Destination)
 {
-    // RequestMoveTo 내부에서 HasAuthority() 체크 후 Client_StartPathFollowing 자동 호출
     RequestMoveTo(Destination);
 }
 
 void AEternalReturnPlayerController::Client_StartPathFollowing_Implementation(const TArray<FVector>& Path)
 {
-    // 서버에서 계산한 경로를 그대로 사용 (NavMesh 재계산 없음)
     CurrentPath = Path;
     CurrentPathIndex = 1;
     bIsFollowingPath = true;
+}
+
+// ─── 크래프팅 Client RPC 구현 ───────────────────────
+
+void AEternalReturnPlayerController::Client_OnCraftingStarted_Implementation(float CraftingTime)
+{
+    // 클라이언트에서 게이지 UI 표시
+    OnCraftingStartedBP(CraftingTime);
+}
+
+void AEternalReturnPlayerController::Client_OnCraftingCancelled_Implementation()
+{
+    // 클라이언트에서 게이지 UI 숨기기
+    OnCraftingCancelledBP();
 }
 
 // ─── 입력 세팅 ──────────────────────────────────────
@@ -166,7 +162,6 @@ void AEternalReturnPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    // 로컬 클라이언트에서만 입력 바인딩
     if (!IsLocalPlayerController()) return;
 
     if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -196,22 +191,37 @@ void AEternalReturnPlayerController::SetupInputComponent()
 
 void AEternalReturnPlayerController::OnInputStarted()
 {
-    // 클릭 시작: 적/땅 감지 (1회)
     UpdateCachedDestination();
 }
 
 void AEternalReturnPlayerController::OnSetDestinationTriggered()
 {
-    // 드래그 이동: 타겟 있으면 무시 (공격 중 드래그로 이동 취소 방지)
     if (TargetActor != nullptr) return;
     UpdateCachedDestination();
 }
 
 void AEternalReturnPlayerController::OnSetDestinationReleased()
 {
-    // 땅 클릭 해제: 타겟 없을 때만 이동 명령 전송
     if (TargetActor == nullptr)
     {
+        APawn* ControlledPawn = GetPawn();
+        if (ControlledPawn)
+        {
+            AEternalReturnCharacter* ERCharacter = Cast<AEternalReturnCharacter>(ControlledPawn);
+            if (ERCharacter && ERCharacter->CraftingComponent)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] bIsCrafting: %s"),
+                    ERCharacter->CraftingComponent->bIsCrafting ? TEXT("true") : TEXT("false"));
+                UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] Character Owner: %s"),
+                    ERCharacter->GetOwner() ? *ERCharacter->GetOwner()->GetName() : TEXT("NULL"));
+
+                if (ERCharacter->CraftingComponent->bIsCrafting)
+                {
+                    ERCharacter->CraftingComponent->CancelCrafting();
+                    UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] CancelCrafting called"));
+                }
+            }
+        }
         Server_RequestMoveTo(CachedDestination);
     }
 }
@@ -224,12 +234,16 @@ void AEternalReturnPlayerController::OnCraftItem()
     AEternalReturnCharacter* ERCharacter = Cast<AEternalReturnCharacter>(ControlledPawn);
     if (!ERCharacter) return;
 
-    if (ERCharacter->CraftingComponent)
-    {
-        ERCharacter->CraftingComponent->CrateItem();
-    }
-}
+    if (!ERCharacter->CraftingComponent) return;
 
+    // 제작 가능한 아이템 없으면 무시
+    if (ERCharacter->CraftingComponent->CraftableList.Num() == 0) return;
+
+    // 이미 제작 중이면 무시
+    if (ERCharacter->CraftingComponent->bIsCrafting) return;
+
+    ERCharacter->CraftingComponent->StartCrafting(ERCharacter->CraftingComponent->CraftableList[0]);
+}
 
 // ─── 목적지 및 타겟 감지 ────────────────────────────
 
@@ -240,16 +254,12 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
 
     CachedDestination = Hit.Location;
 
-    // 적(CombatEntityBase) 클릭 감지
-    // CombatEntityBase 생성자에서 Visibility = Block으로 설정했기 때문에 Hit 가능
     if (AActor* HitActor = Hit.GetActor())
     {
         if (HitActor != GetPawn() && HitActor->IsA<ACombatEntityBase>())
         {
             TargetActor = HitActor;
             CachedDestination = HitActor->GetActorLocation();
-
-            // BP_PlayerController에서 GetPawn → Cast BP_Character → AttackTarget 호출
             OnEnemyClicked(HitActor);
             return;
         }
@@ -259,11 +269,8 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
             OnStructureClicked(HitActor);
             return;
         }
-
     }
 
-    // 땅 클릭: 타겟 초기화 + BP에 알림
-    // BP_PlayerController에서 GetPawn → Cast BP_Character → ClearTarget 호출
     TargetActor = nullptr;
     OnGroundClicked();
 }
