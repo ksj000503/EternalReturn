@@ -8,7 +8,6 @@ ACombatEntityBase::ACombatEntityBase()
 {
     PrimaryActorTick.bCanEverTick = false;
     bReplicates = true;
-
     GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
     // 式式式 StatComponent 儅撩 式式式式式式式式式式式式式式式式式式式式式式式式式式

@@ -211,15 +211,9 @@ void AEternalReturnPlayerController::OnSetDestinationReleased()
             AEternalReturnCharacter* ERCharacter = Cast<AEternalReturnCharacter>(ControlledPawn);
             if (ERCharacter && ERCharacter->CraftingComponent)
             {
-                UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] bIsCrafting: %s"),
-                    ERCharacter->CraftingComponent->bIsCrafting ? TEXT("true") : TEXT("false"));
-                UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] Character Owner: %s"),
-                    ERCharacter->GetOwner() ? *ERCharacter->GetOwner()->GetName() : TEXT("NULL"));
-
                 if (ERCharacter->CraftingComponent->bIsCrafting)
                 {
                     ERCharacter->CraftingComponent->CancelCrafting();
-                    UE_LOG(LogTemp, Warning, TEXT("[OnSetDestinationReleased] CancelCrafting called"));
                 }
             }
         }

@@ -1,4 +1,4 @@
-#include "EternalReturnCharacter.h"
+ï»¿#include "EternalReturnCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CraftingComponent.h"
@@ -11,17 +11,28 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
 
-    // ¦¡¦¡¦¡ ÄÄÆ÷³ÍÆ® »ı¼º ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€â”€ ì»´í¬ë„ŒíŠ¸ ìƒì„± â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
     CharacterStatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("CharacterStatComponent"));
     CraftingComponent = CreateDefaultSubobject<UCraftingComponent>(TEXT("CraftingComponent"));
 
-    // ¦¡¦¡¦¡ ÀçÈ­ ÃÊ±â°ª ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€â”€ ì¬í™” ì´ˆê¸°ê°’ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Gold = 0;
     Experience = 0;
 
-    // ¦¡¦¡¦¡ »óÅÂ ÃÊ±â°ª ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€â”€ ìƒíƒœ ì´ˆê¸°ê°’ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     bIsResting = false;
+}
+
+void AEternalReturnCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (CharacterStatComponent)
+    {
+        CharacterStatComponent->OnHPChanged.AddDynamic(this, &ACombatEntityBase::HandleHPChanged);
+        CharacterStatComponent->OnDeath.AddDynamic(this, &ACombatEntityBase::HandleDeath);
+    }
 }
 
 void AEternalReturnCharacter::GetLifetimeReplicatedProps(
@@ -31,10 +42,74 @@ void AEternalReturnCharacter::GetLifetimeReplicatedProps(
     DOREPLIFETIME(AEternalReturnCharacter, Gold);
     DOREPLIFETIME(AEternalReturnCharacter, Experience);
     DOREPLIFETIME(AEternalReturnCharacter, bIsResting);
-    // Ä³¸¯ÅÍ Àü¿ë ½ºÅÈÀº CharacterStatComponent ³»ºÎ¿¡¼­ º¹Á¦ Ã³¸®
 }
 
-// ¦¡¦¡¦¡ Setter (¼­¹ö Àü¿ë, CharacterStatComponent·Î ¸®´ÙÀÌ·ºÆ®) ¦¡¦¡
+// â”€â”€â”€ Setter ì˜¤ë²„ë¼ì´ë“œ â€” CharacterStatComponent + StatComponent ë™ê¸°í™” â”€â”€
+
+void AEternalReturnCharacter::SetMaxHP(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetMaxHP(value);
+    CharacterStatComponent->SetCurrentHP(value);
+    StatComponent->SetMaxHP(value);
+    StatComponent->SetCurrentHP(value);
+}
+
+void AEternalReturnCharacter::SetCurrentHP(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetCurrentHP(value);
+    StatComponent->SetCurrentHP(value);
+}
+
+void AEternalReturnCharacter::SetHPRegen(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetHPRegen(value);
+    StatComponent->SetHPRegen(value);
+}
+
+void AEternalReturnCharacter::SetAttackPower(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetAttackPower(value);
+    StatComponent->SetAttackPower(value);
+}
+
+void AEternalReturnCharacter::SetDefense(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetDefense(value);
+    StatComponent->SetDefense(value);
+}
+
+void AEternalReturnCharacter::SetMoveSpeed(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetMoveSpeed(value);
+    StatComponent->SetMoveSpeed(value);
+    GetCharacterMovement()->MaxWalkSpeed = value;
+}
+
+void AEternalReturnCharacter::SetAttackSpeed(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetAttackSpeed(value);
+    StatComponent->SetAttackSpeed(value);
+}
+
+void AEternalReturnCharacter::SetAttackRange(float value)
+{
+    if (!HasAuthority()) return;
+    CharacterStatComponent->SetAttackRange(value);
+    StatComponent->SetAttackRange(value);
+    if (AttackRangeSphere)
+    {
+        AttackRangeSphere->SetSphereRadius(value);
+    }
+}
+
+// â”€â”€â”€ CharacterStatComponent ì „ìš© Setter â”€â”€
 
 void AEternalReturnCharacter::SetSkillAmplification(float Value)
 {
@@ -84,7 +159,7 @@ void AEternalReturnCharacter::SetVisionRange(float Value)
     CharacterStatComponent->SetVisionRange(Value);
 }
 
-// ¦¡¦¡¦¡ Getter ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€ Getter â”€â”€
 
 float AEternalReturnCharacter::GetSkillAmplification() const
 {
@@ -126,9 +201,9 @@ float AEternalReturnCharacter::GetVisionRange() const
     return CharacterStatComponent ? CharacterStatComponent->GetVisionRange() : 0.f;
 }
 
-// ¦¡¦¡¦¡ ¸®ÇÃ¸®ÄÉÀÌ¼Ç Äİ¹é ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€ ë¦¬í”Œë¦¬ì¼€ì´ì…˜ ì½œë°± â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void AEternalReturnCharacter::OnRep_IsResting()
 {
-    // Å¬¶óÀÌ¾ğÆ®: ÈŞ½Ä »óÅÂ º¯°æ ½Ã ¾Ö´Ï¸ŞÀÌ¼Ç µî Ã³¸®
+    // í´ë¼ì´ì–¸íŠ¸: íœ´ì‹ ìƒíƒœ ë³€ê²½ ì‹œ ì• ë‹ˆë©”ì´ì…˜ ë“± ì²˜ë¦¬
 }

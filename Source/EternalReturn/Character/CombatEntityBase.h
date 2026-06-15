@@ -38,21 +38,26 @@ public:
     bool HasStatusEffect(EStatusEffect Effect) const;
 
     // ─── Setter (BP의 InitializeStats에서 그대로 호출) ──
-    // 내부적으로 StatComponent로 리다이렉트
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetMaxHP(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetCurrentHP(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetHPRegen(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetAttackPower(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetDefense(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetMoveSpeed(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetAttackSpeed(float value);
-    UFUNCTION(BlueprintCallable, Category = "Stats") void SetAttackRange(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetMaxHP(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetCurrentHP(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetHPRegen(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetAttackPower(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetDefense(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetMoveSpeed(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetAttackSpeed(float value);
+    UFUNCTION(BlueprintCallable, Category = "Stats") virtual void SetAttackRange(float value);
 
     // ─── Getter ─────────────────────────────────────
     UFUNCTION(BlueprintPure, Category = "Stats") float GetCurrentHP() const;
     UFUNCTION(BlueprintPure, Category = "Stats") float GetMaxHP()     const;
     UFUNCTION(BlueprintPure, Category = "Stats") bool  IsDead()       const;
 
+    // ─── StatComponent 델리게이트 핸들러 ────────────
+    UFUNCTION()
+    void HandleHPChanged(float InCurrentHP, float InMaxHP);
+
+    UFUNCTION()
+    void HandleDeath();
 protected:
     // ─── StatComponent ───────────────────────────────
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
@@ -78,16 +83,10 @@ protected:
     void Multicast_Ragdoll();
 
     // ─── UI 콜백 ────────────────────────────────────
-    // BP_Character, BP_MonsterBase에서 구현하여 HP바 업데이트
     UFUNCTION(BlueprintImplementableEvent, Category = "UI")
     void OnHPChanged(float InCurrentHP, float InMaxHP);
 
-    // ─── StatComponent 델리게이트 핸들러 ────────────
-    UFUNCTION()
-    void HandleHPChanged(float InCurrentHP, float InMaxHP);
-
-    UFUNCTION()
-    void HandleDeath();
+    
 
     // ─── 리플리케이션 콜백 ──────────────────────────
     UFUNCTION()

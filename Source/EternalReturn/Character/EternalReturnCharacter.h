@@ -1,5 +1,4 @@
-#pragma once
-
+ï»¿#pragma once
 #include "CoreMinimal.h"
 #include "CombatEntityBase.h"
 #include "InventoryComponent.h"
@@ -16,21 +15,38 @@ class ETERNALRETURN_API AEternalReturnCharacter : public ACombatEntityBase
 public:
     AEternalReturnCharacter();
 
+    virtual void BeginPlay() override;
+
     UFUNCTION(BlueprintPure, Category = "State")
     bool IsResting() const { return bIsResting; }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
     EWeaponType AllowedWeaponType = EWeaponType::None;
 
-    // ÀÎº¥Åä¸®
+    // ì¸ë²¤í† ë¦¬
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
     TObjectPtr<UInventoryComponent> InventoryComponent;
 
-    // Å©·¡ÇÁÆÃ
+    // í¬ë˜í”„íŒ…
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crafting")
     TObjectPtr<UCraftingComponent> CraftingComponent;
 
-    // ¦¡¦¡¦¡ Setter (BPÀÇ InitializeStats¿¡¼­ ±×´ë·Î È£Ãâ) ¦¡¦¡
+    // CharacterStatComponent â€” StatComponentì™€ ë³„ê°œ ì¸ìŠ¤í„´ìŠ¤ ì•„ë‹˜
+    // InitializeStatsì˜ Setterê°€ ì´ìª½ìœ¼ë¡œ ë¦¬ë‹¤ì´ë ‰íŠ¸ë¨
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+    TObjectPtr<UCharacterStatComponent> CharacterStatComponent;
+
+    // â”€â”€â”€ Setter ì˜¤ë²„ë¼ì´ë“œ (CharacterStatComponentë¡œ ë¦¬ë‹¤ì´ë ‰íŠ¸) â”€â”€
+    virtual void SetMaxHP(float value) override;
+    virtual void SetCurrentHP(float value) override;
+    virtual void SetHPRegen(float value) override;
+    virtual void SetAttackPower(float value) override;
+    virtual void SetDefense(float value) override;
+    virtual void SetMoveSpeed(float value) override;
+    virtual void SetAttackSpeed(float value) override;
+    virtual void SetAttackRange(float value) override;
+
+    // â”€â”€â”€ CharacterStatComponent ì „ìš© Setter â”€â”€
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetSkillAmplification(float Value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetCooldownReduction(float Value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetBasicAttackBonus(float Value);
@@ -40,7 +56,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetLifeSteal(float Value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetVisionRange(float Value);
 
-    // ¦¡¦¡¦¡ Getter ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€â”€ Getter â”€â”€
     UFUNCTION(BlueprintPure, Category = "Stats") float GetSkillAmplification() const;
     UFUNCTION(BlueprintPure, Category = "Stats") float GetCooldownReduction() const;
     UFUNCTION(BlueprintPure, Category = "Stats") float GetBasicAttackBonus() const;
@@ -51,21 +67,12 @@ public:
     UFUNCTION(BlueprintPure, Category = "Stats") float GetVisionRange() const;
 
 protected:
-
-    // ¦¡¦¡¦¡ CharacterStatComponent ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-    // CombatEntityBaseÀÇ StatComponent(BaseStatComponent)¿Í º°°³
-    // Ä³¸¯ÅÍ Àü¿ë ½ºÅÈ °ü¸®
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-    TObjectPtr<UCharacterStatComponent> CharacterStatComponent;
-
-    // ¦¡¦¡¦¡ ÀçÈ­ (ÃßÈÄ PlayerState·Î ÀÌµ¿ ¿¹Á¤) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
     int32 Gold;
 
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
     int32 Experience;
 
-    // ¦¡¦¡¦¡ »óÅÂ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
     UPROPERTY(ReplicatedUsing = OnRep_IsResting, BlueprintReadOnly, Category = "State")
     bool bIsResting;
 
