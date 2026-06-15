@@ -179,6 +179,7 @@ void AEternalReturnPlayerController::SetupInputComponent()
         EIC->BindAction(CraftItemAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCraftItem);
         EIC->BindAction(CameraLockAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCameraLockStarted);
         EIC->BindAction(CameraLockAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnCameraLockReleased);
+        EIC->BindAction(UseInventoryAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnUseInventory);
     }
     else
     {
@@ -245,6 +246,18 @@ void AEternalReturnPlayerController::OnCraftItem()
     ERCharacter->CraftingComponent->StartCrafting(ERCharacter->CraftingComponent->CraftableList[0]);
 }
 
+void AEternalReturnPlayerController::OnUseInventory(const FInputActionInstance& Instance)
+{
+    int32 SlotIndex = FMath::RoundToInt(Instance.GetValue().Get<float>()) - 1;
+
+    if (SlotIndex < 0 || SlotIndex > 9) 
+    {
+        return;
+    }
+
+    Server_UseItem(SlotIndex);
+}
+
 // ─── 목적지 및 타겟 감지 ────────────────────────────
 
 void AEternalReturnPlayerController::UpdateCachedDestination()
@@ -273,4 +286,12 @@ void AEternalReturnPlayerController::UpdateCachedDestination()
 
     TargetActor = nullptr;
     OnGroundClicked();
+}
+
+void AEternalReturnPlayerController::Server_UseItem_Implementation(int32 SlotIndex)
+{
+    AEternalReturnCharacter* ERCharacter = Cast<AEternalReturnCharacter>(GetPawn());
+    if (!ERCharacter) return;
+    if (!ERCharacter->InventoryComponent) return;
+    ERCharacter->InventoryComponent->UseItem(SlotIndex);
 }

@@ -51,6 +51,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     bool UnequipItem(int32 EquipSlotIndex);
 
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inventory")
+    void UseItem(int32 SlotIndex);
+
     UPROPERTY(BlueprintAssignable, Category = "Inventory")
     FOnInventoryUpdated OnInventoryUpdated;
 

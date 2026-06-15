@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "EnhancedInputComponent.h"
+
 #include "EternalReturnPlayerController.generated.h"
 
 class UNiagaraSystem;
@@ -106,6 +108,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> CameraLockAction;
 
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> UseInventoryAction;
+
     // ─── 이동 데이터 ────────────────────────────────
     FVector          CachedDestination;
     TArray<FVector>  CurrentPath;
@@ -120,6 +125,7 @@ protected:
     void OnSetDestinationTriggered();
     void OnSetDestinationReleased();
     void OnCraftItem();
+    void OnUseInventory(const FInputActionInstance& Instance);
 
     UFUNCTION(BlueprintImplementableEvent)
     void OnCameraLockStarted();
@@ -137,5 +143,6 @@ private:
     UFUNCTION(Client, Reliable)
     void Client_StartPathFollowing(const TArray<FVector>& Path);
 
-   
+    UFUNCTION(Server, Reliable)
+    void Server_UseItem(int32 SlotIndex);
 };

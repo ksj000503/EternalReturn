@@ -2,6 +2,7 @@
 #include "EternalReturnCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "CraftingComponent.h"
+#include "Stat/BaseStatComponent.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -197,6 +198,10 @@ bool UInventoryComponent::EquipItem(int32 InventoryIndex)
     InventorySlots[InventoryIndex].ItemID = NAME_None;
     InventorySlots[InventoryIndex].bIsEmpty = true;
 
+    OnInventoryUpdated.Broadcast();
+
+    OnEquipSlotsUpdated.Broadcast();
+
     return true;
 }
 
@@ -231,6 +236,63 @@ bool UInventoryComponent::UnequipItem(int32 EquipSlotIndex)
     EquipSlots[EquipSlotIndex].bIsEmpty = true;
 
     return true;
+}
+
+void UInventoryComponent::UseItem_Implementation(int32 SlotIndex)
+{
+    if (!GetOwner()->HasAuthority())
+    {
+        return;
+    }
+
+    if (!InventorySlots.IsValidIndex(SlotIndex))
+    {
+        return;
+    }
+
+    if (InventorySlots[SlotIndex].bIsEmpty)
+    {
+        return;
+    }
+
+    FName ItemID = InventorySlots[SlotIndex].ItemID;
+    
+    FS_ItemData* ItemData = ItemDataTable->FindRow<FS_ItemData>(ItemID, TEXT(""));
+
+    if (!ItemData)
+    {
+        return;
+    }
+
+    switch (ItemData->ItemType)
+    {
+    case EItemType::Weapon:
+    case EItemType::Chest:
+    case EItemType::Head:
+    case EItemType::Arm:
+    case EItemType::Leg:
+        EquipItem(SlotIndex);
+        break;
+
+    case EItemType::Food:
+    {
+        UBaseStatComponent* StatComponent = Cast<UBaseStatComponent>(GetOwner()->GetComponentByClass(UBaseStatComponent::StaticClass()));
+
+        if (StatComponent)
+        {
+            StatComponent->Heal(ItemData->HPRestore);
+
+            InventorySlots[SlotIndex].ItemID = NAME_None;
+
+            InventorySlots[SlotIndex].bIsEmpty = true;
+
+            OnInventoryUpdated.Broadcast();
+        }
+        break;
+    }
+    case EItemType::Material:
+        return;
+    }
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

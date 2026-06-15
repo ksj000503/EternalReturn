@@ -6,8 +6,6 @@
 #include "Stat/CharacterStatComponent.h"
 #include "EternalReturnCharacter.generated.h"
 
-class UCameraComponent;
-class USpringArmComponent;
 class UCraftingComponent;
 
 UCLASS(abstract)
@@ -32,11 +30,6 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crafting")
     TObjectPtr<UCraftingComponent> CraftingComponent;
 
-    UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent.Get(); }
-    
-    UFUNCTION(BlueprintPure, Category = "Components")
-    USpringArmComponent* GetCameraBoom() const { return CameraBoom.Get(); }
-
     // ─── Setter (BP의 InitializeStats에서 그대로 호출) ──
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetSkillAmplification(float Value);
     UFUNCTION(BlueprintCallable, Category = "Stats") void SetCooldownReduction(float Value);
@@ -58,14 +51,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Stats") float GetVisionRange() const;
 
 protected:
-    // ─── 카메라 ─────────────────────────────────────
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    TObjectPtr<UCameraComponent> TopDownCameraComponent;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    TObjectPtr<USpringArmComponent> CameraBoom;
-
-    
 
     // ─── CharacterStatComponent ──────────────────────
     // CombatEntityBase의 StatComponent(BaseStatComponent)와 별개
