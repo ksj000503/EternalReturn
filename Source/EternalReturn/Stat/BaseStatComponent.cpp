@@ -50,6 +50,11 @@ void UBaseStatComponent::SetCurrentHP(float Value)
     CurrentHP = FMath::Clamp(Value, 0.f, MaxHP);
 
     OnRep_CurrentHP();
+
+    if (CurrentHP <= 0.f)
+    {
+        OnDeath.Broadcast();
+    }
 }
 
 void UBaseStatComponent::SetHPRegen(float Value) 
