@@ -180,6 +180,13 @@ void AEternalReturnPlayerController::SetupInputComponent()
         EIC->BindAction(CameraLockAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnCameraLockStarted);
         EIC->BindAction(CameraLockAction, ETriggerEvent::Completed, this, &AEternalReturnPlayerController::OnCameraLockReleased);
         EIC->BindAction(UseInventoryAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnUseInventory);
+
+        EIC->BindAction(SkillQAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillQ);
+        EIC->BindAction(SkillWAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillW);
+        EIC->BindAction(SkillEAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillE);
+        EIC->BindAction(SkillRAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillR);
+        EIC->BindAction(SkillDAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillD);
+        EIC->BindAction(SkillFAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillF);
     }
     else
     {

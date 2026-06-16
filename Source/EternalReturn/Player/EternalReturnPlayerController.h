@@ -111,6 +111,26 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> UseInventoryAction;
 
+    // 스킬 입력
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillQAction;
+
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillWAction;
+
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillEAction;
+
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillRAction;
+
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillDAction;
+
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> SkillFAction;
+
+
     // ─── 이동 데이터 ────────────────────────────────
     FVector          CachedDestination;
     TArray<FVector>  CurrentPath;
@@ -135,6 +155,23 @@ protected:
 
     void UpdateCachedDestination();
 
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillQ();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillW();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillE();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillR();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillD();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnSkillF();
 private:
     // ─── Client RPC ─────────────────────────────────
     UFUNCTION(Client, Reliable)
