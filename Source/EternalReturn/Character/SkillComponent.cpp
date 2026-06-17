@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SkillComponent.h"
 #include "TimerManager.h"
@@ -6,6 +6,7 @@
 USkillComponent::USkillComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
 }
 
 void USkillComponent::BeginPlay()
@@ -18,7 +19,7 @@ void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ Àü¼ú ½ºÅ³ (DataTable) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ì „ìˆ  ìŠ¤í‚¬ (DataTable) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void USkillComponent::SetTacticalSkill(FName InRowName)
 {
@@ -38,7 +39,7 @@ void USkillComponent::SetTacticalSkill(FName InRowName)
 
 void USkillComponent::UseTacticalSkill(ETacticalSkillType InSkillType)
 {
-	// Àü¼ú ½ºÅ³Àº F ½½·Ô °íÁ¤ (D´Â ¹«±â ½ºÅ³ ½½·ÔÀ¸·Î º°µµ »ç¿ë).
+	// ì „ìˆ  ìŠ¤í‚¬ì€ F ìŠ¬ë¡¯ ê³ ì • (DëŠ” ë¬´ê¸° ìŠ¤í‚¬ ìŠ¬ë¡¯ìœ¼ë¡œ ë³„ë„ ì‚¬ìš©).
 	const ESkillKeyType TacticalSlot = ESkillKeyType::Skill_F;
 
 	if (!IsSkillReady(TacticalSlot))
@@ -85,14 +86,14 @@ void USkillComponent::UseTacticalSkill(ETacticalSkillType InSkillType)
 		break;
 	}
 
-	// Àü¼ú ½ºÅ³Àº L1 °íÁ¤.
+	// ì „ìˆ  ìŠ¤í‚¬ì€ L1 ê³ ì •.
 	const float Cooldown = TacticalSkill.SkillStat.Cooldown_L1;
 	StartCooldown(TacticalSlot, Cooldown);
 
 	OnSkillExecuted.Broadcast(TacticalSlot);
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ Ä³¸¯ÅÍ Q/W/E/R ½ºÅ³ (DataAsset) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ìºë¦­í„° Q/W/E/R ìŠ¤í‚¬ (DataAsset) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 UDA_SkillBase* USkillComponent::GetSkillDataByKeyType(ESkillKeyType KeyType) const
 {
@@ -152,8 +153,8 @@ void USkillComponent::UseWeaponSkill()
 		break;
 	}
 
-	// ¹«±â ½ºÅ³ Äğ´Ù¿îÀº ÇöÀç DataAssetÀÌ ¾øÀ¸¹Ç·Î, ÃßÈÄ ¹«±âº° Äğ´Ù¿î °ªÀ» ¿¬°áÇÒ ÀÚ¸®.
-	// TODO: ¹«±â ½ºÅ³ Äğ´Ù¿î °ª ¼Ò½º È®Á¤ ÇÊ¿ä
+	// ë¬´ê¸° ìŠ¤í‚¬ ì¿¨ë‹¤ìš´ì€ í˜„ì¬ DataAssetì´ ì—†ìœ¼ë¯€ë¡œ, ì¶”í›„ ë¬´ê¸°ë³„ ì¿¨ë‹¤ìš´ ê°’ì„ ì—°ê²°í•  ìë¦¬.
+	// TODO: ë¬´ê¸° ìŠ¤í‚¬ ì¿¨ë‹¤ìš´ ê°’ ì†ŒìŠ¤ í™•ì • í•„ìš”
 }
 
 void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
@@ -191,7 +192,7 @@ void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
 	}
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ½ºÅ³ Å¸ÀÔº° ½ÇÇà ÇÔ¼ö (ÇöÀç ºó ½ºÅÓ, ÃßÈÄ ±¸Çö) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ìŠ¤í‚¬ íƒ€ì…ë³„ ì‹¤í–‰ í•¨ìˆ˜ (í˜„ì¬ ë¹ˆ ìŠ¤í…, ì¶”í›„ êµ¬í˜„) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void USkillComponent::Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
 {
@@ -230,7 +231,7 @@ void USkillComponent::Passive(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
 	UE_LOG(LogTemp, Warning, TEXT("Passive"));
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ Àü¼ú ½ºÅ³ ½ÇÇà ÇÔ¼ö (ÇöÀç Blink¸¸ ÀÛ¼º, ³ª¸ÓÁö´Â ºó ½ºÅÓ) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ì „ìˆ  ìŠ¤í‚¬ ì‹¤í–‰ í•¨ìˆ˜ (í˜„ì¬ Blinkë§Œ ì‘ì„±, ë‚˜ë¨¸ì§€ëŠ” ë¹ˆ ìŠ¤í…) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void USkillComponent::Blink()
 {
@@ -287,23 +288,25 @@ void USkillComponent::HealingWind()
 	UE_LOG(LogTemp, Warning, TEXT("HealingWind"));
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ¹«±â ½ºÅ³ ½ÇÇà ÇÔ¼ö (ÇöÀç ºó ½ºÅÓ, ÃßÈÄ ±¸Çö) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ë¬´ê¸° ìŠ¤í‚¬ ì‹¤í–‰ í•¨ìˆ˜ (í˜„ì¬ ë¹ˆ ìŠ¤í…, ì¶”í›„ êµ¬í˜„) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void USkillComponent::Bow()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Bow"));
 }
 
 void USkillComponent::TwoHandedSword()
 {
+	UE_LOG(LogTemp, Warning, TEXT("TwoHandedSword"));
 }
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ Äğ´Ù¿î Ã³¸® ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€ ì¿¨ë‹¤ìš´ ì²˜ë¦¬ â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 bool USkillComponent::IsSkillReady(ESkillKeyType KeyType) const
 {
 	const bool* bReady = bCanUseSkill.Find(KeyType);
 
-	// Ã³À½ ¾²´Â ½½·ÔÀº Map¿¡ Ç×¸ñÀÌ ¾øÀ¸¹Ç·Î true(»ç¿ë °¡´É)·Î Ãë±Ş
+	// ì²˜ìŒ ì“°ëŠ” ìŠ¬ë¡¯ì€ Mapì— í•­ëª©ì´ ì—†ìœ¼ë¯€ë¡œ true(ì‚¬ìš© ê°€ëŠ¥)ë¡œ ì·¨ê¸‰
 	return bReady ? *bReady : true;
 }
 
@@ -316,17 +319,73 @@ void USkillComponent::StartCooldown(ESkillKeyType KeyType, float Cooldown)
 
 	bCanUseSkill.Add(KeyType, false);
 
-	// KeyTypeÀ» º¯¼ö¿¡ µû·Î ÀúÀåÇÏÁö ¾Ê°í, Å¸ÀÌ¸Ó Äİ¹é ÀÚÃ¼¿¡ ¹ÙÀÎµùÇØ¼­ ³Ñ±ä´Ù.
-	// ÀÌ·¸°Ô ÇÏ¸é ¿©·¯ ½ºÅ³ÀÇ Äğ´Ù¿îÀÌ µ¿½Ã¿¡ ÁøÇàµÇ¾îµµ ¼­·Î KeyType °ªÀ» µ¤¾î¾²Áö ¾Ê´Â´Ù.
+	// ì„œë²„ ê¶Œìœ„ íŒì •ìš© ì¢…ë£Œ íƒ€ì´ë¨¸ (KeyTypeì„ ì½œë°±ì— ë°”ë¡œ ë°”ì¸ë”©í•´ì„œ ìŠ¬ë¡¯ ê°„ ì¶©ëŒ ì—†ìŒ).
 	FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &USkillComponent::HandleCooldownFinished, KeyType);
 
 	FTimerHandle& Handle = CooldownTimerHandles.FindOrAdd(KeyType);
 	GetWorld()->GetTimerManager().SetTimer(Handle, Delegate, Cooldown, false);
+
+	// ì´ ì•¡í„°ë¥¼ ì†Œìœ í•œ í´ë¼ì´ì–¸íŠ¸ì—ê²Œ "í‘œì‹œìš©" ì¿¨ë‹¤ìš´ ì •ë³´ë¥¼ ì „ë‹¬.
+	// ì„œë²„ê°€ ì§ì ‘ í˜¸ì¶œí•˜ë¯€ë¡œ í˜¸ìŠ¤íŠ¸(ì„œë²„=í´ë¼1)ì—ì„œë„ ë™ì¼í•˜ê²Œ í•œ ë²ˆ ê±°ì¹˜ê²Œ ë˜ì–´ ì¼ê´€ë¨.
+	Client_StartCooldownDisplay(KeyType, Cooldown);
+}
+
+void USkillComponent::Client_StartCooldownDisplay_Implementation(ESkillKeyType KeyType, float Cooldown)
+{
+	// ì§„í–‰ë¥  ê³„ì‚°ìš© ì •ë³´ ì €ì¥ (ì‹œì‘ ì‹œê°, ì´ ì¿¨ë‹¤ìš´) â€” í´ë¼ì´ì–¸íŠ¸ ë¡œì»¬ì—ì„œë§Œ ì‚¬ìš©.
+	FCooldownInfo Info;
+	Info.TotalCooldown = Cooldown;
+	Info.StartTime = GetWorld()->GetTimeSeconds();
+	CooldownInfoMap.Add(KeyType, Info);
+
+	// 0.1ì´ˆ ê°„ê²©ìœ¼ë¡œ ì§„í–‰ë¥ ë§Œ ê°±ì‹ í•˜ëŠ” ë³„ë„ íƒ€ì´ë¨¸ (Tick ë¯¸ì‚¬ìš©, UI í‘œì‹œìš©). í´ë¼ì´ì–¸íŠ¸ ë¡œì»¬ íƒ€ì´ë¨¸.
+	FTimerDelegate UpdateDelegate = FTimerDelegate::CreateUObject(this, &USkillComponent::UpdateCooldownPercent, KeyType);
+	FTimerHandle& UpdateHandle = CooldownUpdateTimerHandles.FindOrAdd(KeyType);
+	GetWorld()->GetTimerManager().SetTimer(UpdateHandle, UpdateDelegate, 0.1f, true);
+
+	// UIê°€ "ì¿¨ë‹¤ìš´ ì‹œì‘ë¨" ì‹œì ì„ ì•Œ ìˆ˜ ìˆë„ë¡ í´ë¼ì´ì–¸íŠ¸ ë¡œì»¬ë¡œë„ Broadcast.
+	// (ì„œë²„ ìª½ OnSkillExecutedëŠ” ì‹¤ì œ ìŠ¤í‚¬ ì‹¤í–‰ ë¡œì§ìš©ì´ê³ , ì´ê±´ ìˆœìˆ˜ í‘œì‹œ íŠ¸ë¦¬ê±°ìš©)
+	OnSkillExecuted.Broadcast(KeyType);
+
+	// ì‹œì‘ ì¦‰ì‹œ 100%(1.0), ë‚¨ì€ì‹œê°„=Cooldownìœ¼ë¡œ í•œ ë²ˆ ì•Œë ¤ì¤€ë‹¤.
+	OnCooldownUpdated.Broadcast(KeyType, 1.0f, Cooldown);
 }
 
 void USkillComponent::HandleCooldownFinished(ESkillKeyType KeyType)
 {
+	// ì„œë²„ ê¶Œìœ„ íŒì •: ì´ì œ ë‹¤ì‹œ ì‚¬ìš© ê°€ëŠ¥.
 	bCanUseSkill.Add(KeyType, true);
 
 	OnCooldownFinished.Broadcast(KeyType);
+}
+
+void USkillComponent::UpdateCooldownPercent(ESkillKeyType KeyType)
+{
+	const FCooldownInfo* Info = CooldownInfoMap.Find(KeyType);
+	if (!Info || Info->TotalCooldown <= 0.f)
+	{
+		return;
+	}
+
+	const float Elapsed = GetWorld()->GetTimeSeconds() - Info->StartTime;
+	const float Remaining = FMath::Clamp(Info->TotalCooldown - Elapsed, 0.f, Info->TotalCooldown);
+
+	// 1.0(ë§‰ ì‚¬ìš©) â†’ 0.0(ì‚¬ìš© ê°€ëŠ¥)ìœ¼ë¡œ ë–¨ì–´ì§€ëŠ” ë¹„ìœ¨
+	const float Percent = Remaining / Info->TotalCooldown;
+
+	OnCooldownUpdated.Broadcast(KeyType, Percent, Remaining);
+
+	// í‘œì‹œìš© ì§„í–‰ë¥ ì´ 0ì— ë„ë‹¬í•˜ë©´, ì´ íƒ€ì´ë¨¸ëŠ” ë” ì´ìƒ í•„ìš” ì—†ìœ¼ë‹ˆ ìŠ¤ìŠ¤ë¡œ ì •ë¦¬.
+	// (ì„œë²„ ê¶Œìœ„ íŒì •ì¸ bCanUseSkillì€ HandleCooldownFinishedê°€ ë³„ë„ë¡œ ê°±ì‹ í•¨)
+	if (Percent <= 0.f)
+	{
+		if (FTimerHandle* UpdateHandle = CooldownUpdateTimerHandles.Find(KeyType))
+		{
+			GetWorld()->GetTimerManager().ClearTimer(*UpdateHandle);
+		}
+		CooldownInfoMap.Remove(KeyType);
+
+		// UIê°€ "ì¿¨ë‹¤ìš´ ëë‚¨"(ìˆ«ì/ì˜¤ë²„ë ˆì´ ìˆ¨ê¹€) ì‹œì ì„ ì•Œ ìˆ˜ ìˆë„ë¡ í´ë¼ì´ì–¸íŠ¸ ë¡œì»¬ë¡œë„ Broadcast.
+		OnCooldownFinished.Broadcast(KeyType);
+	}
 }

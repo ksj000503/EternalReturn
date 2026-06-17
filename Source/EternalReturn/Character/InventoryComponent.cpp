@@ -40,13 +40,11 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UInventoryComponent::OnRep_InventorySlots()
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnRep_InventorySlots called"));
     OnInventoryUpdated.Broadcast();
 }
 
 void UInventoryComponent::OnRep_EquipSlots()
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnRep_EquipSlots called"));
     OnEquipSlotsUpdated.Broadcast();
 }
 
@@ -57,11 +55,9 @@ UCraftingComponent* UInventoryComponent::GetCraftingComponent()
 
 bool UInventoryComponent::AddItem(FName ItemID)
 {
-    UE_LOG(LogTemp, Warning, TEXT("AddItem called"));
 
     if (!GetOwner()->HasAuthority())
     {
-        UE_LOG(LogTemp, Warning, TEXT("AddItem: No authority"));
         return false;
     }
 

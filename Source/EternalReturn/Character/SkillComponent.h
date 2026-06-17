@@ -12,6 +12,23 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillExecuted, ESkillKeyType, KeyType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCooldownFinished, ESkillKeyType, KeyType);
 
+// KeyType, 진행률(1.0=막 시작/풀쿨, 0.0=쿨다운 끝남), 남은 시간(초)을 같이 넘겨서
+// UI가 Progress Bar의 Percent와 숫자 텍스트 둘 다 바로 채울 수 있게 한다.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCooldownUpdated, ESkillKeyType, KeyType, float, Percent, float, RemainingTime);
+
+// 진행률 계산에 필요한 최소 정보만 보관 (시작 시각 + 총 쿨다운 시간)
+USTRUCT()
+struct FCooldownInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float TotalCooldown = 0.f;
+
+	UPROPERTY()
+	float StartTime = 0.f;
+};
+
 UCLASS(BlueprintType, Blueprintable, meta = (BlueprintSpawnableComponent))
 class ETERNALRETURN_API USkillComponent : public UActorComponent
 {
@@ -113,18 +130,37 @@ protected:
 	// ───────── 쿨다운 처리 (Map 제거, 충돌 없는 Delegate 바인딩 방식) ─────────
 
 	// 쿨다운 시작: 슬롯 인덱스(KeyType)를 타이머 콜백에 바로 바인딩하여 변수 공유 충돌을 없앤다.
+	// 서버에서만 실행됨 (사용 가능 여부 판정은 서버 권위 유지).
 	void StartCooldown(ESkillKeyType KeyType, float Cooldown);
 
 	// 타이머 만료 시 호출됨. KeyType은 CreateUObject에서 바인딩되어 전달되므로
-	// 다른 스킬이 동시에 쿨다운 중이어도 서로 덮어쓰지 않는다.
+	// 다른 스킬이 동시에 쿨다운 중이어도 서로 덮어쓰지 않는다. 서버에서만 실행됨.
 	void HandleCooldownFinished(ESkillKeyType KeyType);
 
+	// 0.1초 간격으로 호출되어 진행률을 계산해 OnCooldownUpdated로 Broadcast (Tick 미사용).
+	// 서버/클라이언트 양쪽에서 각자 로컬로 호출됨 (서버는 판정용 타이머와 별개로 자기 화면 표시용,
+	// 클라이언트는 Client RPC로 받은 정보로 자기 화면 표시용).
+	void UpdateCooldownPercent(ESkillKeyType KeyType);
+
 	bool IsSkillReady(ESkillKeyType KeyType) const;
+
+	// 서버가 쿨다운을 시작시킨 직후, 이 액터를 소유한 클라이언트에게만 "표시용" 정보를 전달.
+	// 사용 가능 여부 판정에는 관여하지 않고, 순수하게 클라이언트 쪽 UI 진행률 계산을 위한 것.
+	UFUNCTION(Client, Reliable)
+	void Client_StartCooldownDisplay(ESkillKeyType KeyType, float Cooldown);
 
 	// 슬롯별 타이머 핸들 (Map 대신 고정 슬롯 6개로 관리해도 되지만,
 	// 기존 구조(Map<KeyType, TimerHandle>)를 그대로 유지)
 	UPROPERTY()
 	TMap<ESkillKeyType, FTimerHandle> CooldownTimerHandles;
+
+	// 0.1초 간격 진행률 갱신용 별도 타이머 핸들 (쿨다운 종료 타이머와 분리)
+	UPROPERTY()
+	TMap<ESkillKeyType, FTimerHandle> CooldownUpdateTimerHandles;
+
+	// 슬롯별 진행률 계산용 정보 (시작 시각, 총 쿨다운)
+	UPROPERTY()
+	TMap<ESkillKeyType, FCooldownInfo> CooldownInfoMap;
 
 	// 슬롯별 사용 가능 여부 (Map 유지, 단 Set 시점에 KeyType을 변수에 따로 보관하지 않음)
 	UPROPERTY(BlueprintReadOnly, Category = "Skill")
@@ -138,4 +174,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Skill|Delegate")
 	FOnCooldownFinished OnCooldownFinished;
+
+	// WBP_HUD가 이걸 Bind해서 각 WBP_SkillUI의 Progress Bar Percent에 바로 연결하면 됨.
+	// Percent는 1.0(스킬 막 사용, 풀쿨)에서 시작해 0.0(사용 가능)으로 떨어진다.
+	UPROPERTY(BlueprintAssignable, Category = "Skill|Delegate")
+	FOnCooldownUpdated OnCooldownUpdated;
 };
