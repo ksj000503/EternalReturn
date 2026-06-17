@@ -6,7 +6,7 @@
 #include "EternalReturnCharacter.generated.h"
 
 class UCraftingComponent;
-
+class USkillComponent;
 UCLASS(abstract)
 class ETERNALRETURN_API AEternalReturnCharacter : public ACombatEntityBase
 {
@@ -30,6 +30,10 @@ public:
     // 크래프팅
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crafting")
     TObjectPtr<UCraftingComponent> CraftingComponent;
+
+    // 스킬
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
+    TObjectPtr<USkillComponent> SkillComponent;
 
     // CharacterStatComponent — StatComponent와 별개 인스턴스 아님
     // InitializeStats의 Setter가 이쪽으로 리다이렉트됨

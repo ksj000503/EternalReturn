@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/Texture2D.h"
+#include "Engine/DataTable.h"
 
 #include "ERTypes.generated.h"
 
@@ -92,7 +93,46 @@ enum class ESpawnType : uint8
 {
     NoSpawnMaterial     UMETA(DisplayName = "no스폰"),
     SpawnMaterial     UMETA(DisplayName = "스폰")
-    
+
+};
+
+UENUM(BlueprintType)
+enum class ESkillType : uint8
+{
+    Passive         UMETA(DisplayName = "패시브"),
+    Toggle          UMETA(DisplayName = "모드 토글"),
+    Buff            UMETA(DisplayName = "강화"),
+    Projectile      UMETA(DisplayName = "단일 투사체 공격"),
+    Dash            UMETA(DisplayName = "이동기"),
+    CC              UMETA(DisplayName = "상태이상 적용"),
+    AreaDamage      UMETA(DisplayName = "광역 공격")
+};
+
+UENUM(BlueprintType)
+enum class ESkillKeyType : uint8
+{
+    Skill_Q            UMETA(DisplayName = "Q"),
+    Skill_W            UMETA(DisplayName = "W"),
+    Skill_E            UMETA(DisplayName = "E"),
+    Skill_R            UMETA(DisplayName = "R"),
+    Skill_D            UMETA(DisplayName = "D"),
+    Skill_F            UMETA(DisplayName = "F")
+};
+
+UENUM(BlueprintType)
+enum class ETacticalSkillType : uint8
+{
+    Blink                UMETA(DisplayName = "블링크"),
+    Quake                UMETA(DisplayName = "지진"),
+    ProtocolViolation    UMETA(DisplayName = "프로토콜 위반"),
+    ElectricShift        UMETA(DisplayName = "붉은 폭풍"),
+    ForceField           UMETA(DisplayName = "초월"),
+    Totem                UMETA(DisplayName = "아티팩트"),
+    Nullification        UMETA(DisplayName = "무효화"),
+    SoulStealer          UMETA(DisplayName = "강한 결속"),
+    TheStrijder          UMETA(DisplayName = "스트라이더 - A13"),
+    BladeofTruth         UMETA(DisplayName = "진실의 칼날"),
+    HealingWind          UMETA(DisplayName = "치유의 바람")
 };
 
 USTRUCT(BlueprintType)
@@ -186,7 +226,7 @@ struct FS_ItemData : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FName Material2;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FS_ItemStatData Stats;
 };
@@ -210,4 +250,58 @@ struct FStructureInventory
 
     UPROPERTY(BlueprintReadWrite)
     FName ItemID;
+};
+
+USTRUCT(BlueprintType)
+struct FTacticalSkillStat
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Cooldown_L1 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Cooldown_L2 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Damage_L1 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Damage_L2 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Heal_L1 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Heal_L2 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Shield_L1 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Shield_L2 = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Range = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FText Description;
+};
+
+USTRUCT(BlueprintType)
+struct FTacticalSkillTableRow : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FText Name;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ETacticalSkillType SkillType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TObjectPtr<UTexture2D> Image;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTacticalSkillStat SkillStat;
 };

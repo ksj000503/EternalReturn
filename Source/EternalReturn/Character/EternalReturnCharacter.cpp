@@ -2,6 +2,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CraftingComponent.h"
+#include "SkillComponent.h"
 
 AEternalReturnCharacter::AEternalReturnCharacter()
 {
@@ -15,6 +16,7 @@ AEternalReturnCharacter::AEternalReturnCharacter()
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
     CharacterStatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("CharacterStatComponent"));
     CraftingComponent = CreateDefaultSubobject<UCraftingComponent>(TEXT("CraftingComponent"));
+    SkillComponent = CreateDefaultSubobject<USkillComponent>(TEXT("SkillComponent"));
 
     // ─── 재화 초기값 ─────────────────────────────────
     Gold = 0;
