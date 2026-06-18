@@ -64,8 +64,10 @@ public:
 	void SetTacticalSkill(FName InRowName);
 
 	// 전술 스킬 사용. TacticalSkill.SkillType(블링크/지진/...)으로 분기해서 실행한다.
+	// TargetLocation: 마우스 클릭 위치(월드 좌표). 위치가 필요 없는 스킬은 기본값(Zero) 그대로 두면 된다.
+	// 마우스 좌표는 클라이언트만 알 수 있으므로, BP의 Server RPC(C2S_SkillF 등)에서 클라이언트가 구한 값을 그대로 넘겨받아야 한다.
 	UFUNCTION(BlueprintCallable, Category = "Skill|Tactical")
-	void UseTacticalSkill(ETacticalSkillType InSkillType);
+	void UseTacticalSkill(ETacticalSkillType InSkillType, FVector TargetLocation = FVector::ZeroVector);
 
 	// ───────── 캐릭터 Q/W/E/R 스킬 (DataAsset) ─────────
 
@@ -91,31 +93,33 @@ public:
 
 	// 캐릭터 BP의 C2S_SkillQ/W/E/R/D/F 에서 그대로 호출하는 진입점.
 	// 쿨다운 체크 → KeyType에 맞는 DataAsset을 골라 SkillType으로 라우팅.
+	// TargetLocation: 마우스 클릭 위치(월드 좌표). 위치가 필요 없는 스킬은 기본값(Zero)로 두면 된다.
 	UFUNCTION(BlueprintCallable, Category = "Skill|Character")
-	void ExecuteSkill(ESkillKeyType KeyType);
+	void ExecuteSkill(ESkillKeyType KeyType, FVector TargetLocation = FVector::ZeroVector);
 
 	// 무기 스킬(Skill_D) 진입점. WeaponType으로 분기해서 실행한다.
 	UFUNCTION(BlueprintCallable, Category = "Skill|Weapon")
-	void UseWeaponSkill();
+	void UseWeaponSkill(FVector TargetLocation = FVector::ZeroVector);
 
 protected:
 	// KeyType에 해당하는 Skill_*_Data를 반환 (Skill_D, Skill_F는 현재 캐릭터 스킬 DataAsset 미사용 → nullptr)
 	UDA_SkillBase* GetSkillDataByKeyType(ESkillKeyType KeyType) const;
 
 	// DataAsset의 SkillType Enum을 보고 실제 스킬 함수로 분기
-	void SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
+	void SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
 
 	// ───────── 스킬 타입별 실행 함수 (DataAsset 기반, 캐릭터 Q/W/E/R) ─────────
-	void Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void Dash(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void AreaDamage(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void Buff(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void CC(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void Toggle(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
-	void Passive(ESkillKeyType KeyType, UDA_SkillBase* SkillData);
+	// 전부 TargetLocation(마우스 클릭 위치)을 받도록 통일. 안 쓰는 타입은 그냥 무시하면 됨.
+	void Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void Dash(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void AreaDamage(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void Buff(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void CC(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void Toggle(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
+	void Passive(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation);
 
 	// ───────── 전술 스킬 실행 함수 (TacticalSkill.SkillStat 기반, 11종) ─────────
-	void Blink();
+	void Blink(const FVector& TargetLocation);
 	void Quake();
 	void ProtocolViolation();
 	void ElectricShift();
@@ -169,6 +173,12 @@ protected:
 	// 슬롯별 사용 가능 여부 (Map 유지, 단 Set 시점에 KeyType을 변수에 따로 보관하지 않음)
 	UPROPERTY(BlueprintReadOnly, Category = "Skill")
 	TMap<ESkillKeyType, bool> bCanUseSkill;
+
+	// ───────── Dash 진행 상태 (TickComponent에서 매 프레임 이동 처리) ─────────
+	bool bIsDashing = false;
+	FVector DashDirection = FVector::ZeroVector;
+	float DashRemainingDistance = 0.f;
+	float DashSpeed = 0.f; // cm/s
 
 public:
 	// ───────── Delegates ─────────

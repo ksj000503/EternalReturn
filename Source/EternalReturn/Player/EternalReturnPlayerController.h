@@ -130,6 +130,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     TObjectPtr<UInputAction> SkillFAction;
 
+    UPROPERTY(EditAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> StopAction;
+
 
     // ─── 이동 데이터 ────────────────────────────────
     FVector          CachedDestination;
@@ -172,6 +175,9 @@ protected:
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Input")
     void OnSkillF();
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Input")
+    void OnStop();
 private:
     // ─── Client RPC ─────────────────────────────────
     UFUNCTION(Client, Reliable)

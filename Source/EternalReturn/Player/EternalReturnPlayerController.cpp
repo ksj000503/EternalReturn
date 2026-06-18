@@ -187,6 +187,8 @@ void AEternalReturnPlayerController::SetupInputComponent()
         EIC->BindAction(SkillRAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillR);
         EIC->BindAction(SkillDAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillD);
         EIC->BindAction(SkillFAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnSkillF);
+        
+        EIC->BindAction(StopAction, ETriggerEvent::Started, this, &AEternalReturnPlayerController::OnStop);
     }
     else
     {

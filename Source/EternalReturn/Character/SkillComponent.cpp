@@ -18,6 +18,30 @@ void USkillComponent::BeginPlay()
 void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsDashing)
+	{
+		AActor* OwnerActor = GetOwner();
+		if (!OwnerActor)
+		{
+			bIsDashing = false;
+			return;
+		}
+
+		const float StepDistance = FMath::Min(DashSpeed * DeltaTime, DashRemainingDistance);
+		const FVector StepOffset = DashDirection * StepDistance;
+
+		FHitResult Hit;
+		OwnerActor->SetActorLocation(OwnerActor->GetActorLocation() + StepOffset, true, &Hit);
+
+		DashRemainingDistance -= StepDistance;
+
+		// 목표 거리를 다 이동했거나, 벽 같은 곳에 막히면 대시 종료.
+		if (DashRemainingDistance <= 0.f || Hit.bBlockingHit)
+		{
+			bIsDashing = false;
+		}
+	}
 }
 
 void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -45,7 +69,7 @@ void USkillComponent::SetTacticalSkill(FName InRowName)
 	}
 }
 
-void USkillComponent::UseTacticalSkill(ETacticalSkillType InSkillType)
+void USkillComponent::UseTacticalSkill(ETacticalSkillType InSkillType, FVector TargetLocation)
 {
 	// 전술 스킬은 F 슬롯 고정 (D는 무기 스킬 슬롯으로 별도 사용).
 	const ESkillKeyType TacticalSlot = ESkillKeyType::Skill_F;
@@ -58,7 +82,7 @@ void USkillComponent::UseTacticalSkill(ETacticalSkillType InSkillType)
 	switch (InSkillType)
 	{
 	case ETacticalSkillType::Blink:
-		Blink();
+		Blink(TargetLocation);
 		break;
 	case ETacticalSkillType::Quake:
 		Quake();
@@ -120,7 +144,7 @@ UDA_SkillBase* USkillComponent::GetSkillDataByKeyType(ESkillKeyType KeyType) con
 	}
 }
 
-void USkillComponent::ExecuteSkill(ESkillKeyType KeyType)
+void USkillComponent::ExecuteSkill(ESkillKeyType KeyType, FVector TargetLocation)
 {
 	if (!IsSkillReady(KeyType))
 	{
@@ -133,14 +157,14 @@ void USkillComponent::ExecuteSkill(ESkillKeyType KeyType)
 		return;
 	}
 
-	SkillType(KeyType, SkillData);
+	SkillType(KeyType, SkillData, TargetLocation);
 
 	StartCooldown(KeyType, SkillData->Cooldown);
 
 	OnSkillExecuted.Broadcast(KeyType);
 }
 
-void USkillComponent::UseWeaponSkill()
+void USkillComponent::UseWeaponSkill(FVector TargetLocation)
 {
 	const ESkillKeyType WeaponSlot = ESkillKeyType::Skill_D;
 
@@ -163,9 +187,10 @@ void USkillComponent::UseWeaponSkill()
 
 	// 무기 스킬 쿨다운은 현재 DataAsset이 없으므로, 추후 무기별 쿨다운 값을 연결할 자리.
 	// TODO: 무기 스킬 쿨다운 값 소스 확정 필요
+	// TODO: Bow/TwoHandedSword도 TargetLocation 필요해지면 여기서 같이 넘겨주면 됨.
 }
 
-void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	if (!SkillData)
 	{
@@ -175,75 +200,133 @@ void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
 	switch (SkillData->SkillType)
 	{
 	case ESkillType::Projectile:
-		Projectile(KeyType, SkillData);
+		Projectile(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::Dash:
-		Dash(KeyType, SkillData);
+		Dash(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::AreaDamage:
-		AreaDamage(KeyType, SkillData);
+		AreaDamage(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::Buff:
-		Buff(KeyType, SkillData);
+		Buff(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::CC:
-		CC(KeyType, SkillData);
+		CC(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::Toggle:
-		Toggle(KeyType, SkillData);
+		Toggle(KeyType, SkillData, TargetLocation);
 		break;
 	case ESkillType::Passive:
-		Passive(KeyType, SkillData);
+		Passive(KeyType, SkillData, TargetLocation);
 		break;
 	default:
 		break;
 	}
 }
 
-// ───────── 스킬 타입별 실행 함수 (현재 빈 스텁, 추후 구현) ─────────
+// ───────── 스킬 타입별 실행 함수 (현재 Dash만 작성, 나머지는 빈 스텁) ─────────
 
-void USkillComponent::Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Projectile"));
 }
 
-void USkillComponent::Dash(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::Dash(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Dash"));
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor || !OwnerActor->HasAuthority())
+	{
+		return;
+	}
+
+	FVector Direction = TargetLocation - OwnerActor->GetActorLocation();
+	Direction.Z = 0.f;
+	Direction = Direction.GetSafeNormal();
+
+	if (Direction.IsNearlyZero())
+	{
+		return;
+	}
+
+	// SkillData->Range를 "대시로 이동할 거리"로 사용. DashDuration 동안 그 거리를 이동하도록 속도를 역산한다.
+	// (Blink의 Range가 "최대 이동 거리"였던 것과 같은 의미로 통일)
+	const float DashDistance = SkillData ? SkillData->Range : 0.f;
+	const float DashDuration = 0.2f; // 임시값. 캐릭터마다 다르게 하고 싶으면 DataAsset에 필드 추가해서 빼면 됨.
+
+	if (DashDistance <= 0.f)
+	{
+		return;
+	}
+
+	DashDirection = Direction;
+	DashRemainingDistance = DashDistance;
+	DashSpeed = DashDistance / DashDuration;
+	bIsDashing = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("[SkillComponent] Dash start -> Direction=%s Distance=%.1f Speed=%.1f"), *Direction.ToString(), DashDistance, DashSpeed);
 }
 
-void USkillComponent::AreaDamage(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::AreaDamage(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	UE_LOG(LogTemp, Warning, TEXT("AreaDamage"));
 }
 
-void USkillComponent::Buff(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::Buff(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Buff"));
 }
 
-void USkillComponent::CC(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::CC(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	UE_LOG(LogTemp, Warning, TEXT("CC"));
 }
 
-void USkillComponent::Toggle(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::Toggle(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	bUseToggle = !bUseToggle;
 
 	UE_LOG(LogTemp, Warning, TEXT("[SkillComponent] Toggle - bUseToggle = %s"), bUseToggle ? TEXT("true") : TEXT("false"));
 }
 
-void USkillComponent::Passive(ESkillKeyType KeyType, UDA_SkillBase* SkillData)
+void USkillComponent::Passive(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Passive"));
 }
 
 // ───────── 전술 스킬 실행 함수 (현재 Blink만 작성, 나머지는 빈 스텁) ─────────
 
-void USkillComponent::Blink()
+void USkillComponent::Blink(const FVector& TargetLocation)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Blink"));
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor || !OwnerActor->HasAuthority())
+	{
+		return;
+	}
+
+	// SetTacticalSkill로 DataTable에서 Range를 아직 안 채워놨으면 0이라서,
+	// 일단 테스트 단계에서는 0이면 거리 제한 없이 마우스 위치로 그대로 이동하게 둔다.
+	const float MaxRange = TacticalSkill.SkillStat.Range;
+
+	const FVector CurrentLocation = OwnerActor->GetActorLocation();
+	const FVector Delta = TargetLocation - CurrentLocation;
+	const float Distance = Delta.Size();
+
+	FVector FinalLocation;
+	if (MaxRange <= 0.f || Distance <= MaxRange)
+	{
+		// 마우스가 사거리 안이면 그 지점으로 정확히 이동.
+		FinalLocation = TargetLocation;
+	}
+	else
+	{
+		// 사거리 밖이면 마우스 방향으로 MaxRange만큼만 이동.
+		FinalLocation = CurrentLocation + Delta.GetSafeNormal() * MaxRange;
+	}
+
+	OwnerActor->SetActorLocation(FinalLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SkillComponent] Blink -> %s (Distance=%.1f, MaxRange=%.1f)"), *FinalLocation.ToString(), Distance, MaxRange);
 }
 
 void USkillComponent::Quake()
