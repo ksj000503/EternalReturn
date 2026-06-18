@@ -2,6 +2,7 @@
 
 #include "SkillComponent.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 USkillComponent::USkillComponent()
 {
@@ -17,6 +18,13 @@ void USkillComponent::BeginPlay()
 void USkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USkillComponent, bUseToggle);
 }
 
 // ───────── 전술 스킬 (DataTable) ─────────

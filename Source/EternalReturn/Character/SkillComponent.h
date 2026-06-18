@@ -43,6 +43,9 @@ protected:
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// 이 컴포넌트가 복제할 변수를 등록 (bUseToggle을 서버→클라이언트로 복제하기 위해 필요).
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	// ───────── 전술 스킬 (DataTable) ─────────
 
 	// 에디터에서 직접 DT_TacticalSkillData를 꽂아두는 DataTable 참조.
@@ -78,7 +81,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill|Character")
 	UDA_SkillBase* Skill_R_Data;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill|Character")
+	// 서버에서만 Toggle()로 값이 바뀌므로, 클라이언트에 자동으로 내려가도록 Replicated 지정.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Skill|Character")
 	bool bUseToggle = false;
 
 	// 무기 스킬(Skill_D)에서 어떤 무기 타입으로 분기할지 — DataTable 대신 에디터에서 직접 선택.
