@@ -3,6 +3,8 @@
 #include "SkillComponent.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
+#include <Navigation/PathFollowingComponent.h>
+#include <GameFramework/ProjectileMovementComponent.h>
 
 USkillComponent::USkillComponent()
 {
@@ -229,6 +231,46 @@ void USkillComponent::SkillType(ESkillKeyType KeyType, UDA_SkillBase* SkillData,
 
 void USkillComponent::Projectile(ESkillKeyType KeyType, UDA_SkillBase* SkillData, const FVector& TargetLocation)
 {
+	//AActor* OwnerActor = GetOwner();
+	//if (!OwnerActor || !SkillData || !SkillData->ProjectileClass) return;
+
+	//// 1. 발사 위치 및 방향 계산
+	//FVector SpawnLocation = OwnerActor->GetActorLocation() + (OwnerActor->GetActorForwardVector() * 50.0f);
+	//FVector Direction = (TargetLocation - OwnerActor->GetActorLocation()).GetSafeNormal();
+	//FRotator SpawnRotation = Direction.Rotation();
+
+	//FActorSpawnParameters SpawnParams;
+	//SpawnParams.Owner = OwnerActor;
+	//SpawnParams.Instigator = Cast<APawn>(OwnerActor);
+
+	//// 2. 화살 스폰
+	//AActor* SpawnedProjectile = GetWorld()->SpawnActor<AActor>(SkillData->ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+	//// 3. 화살 설정 (Initialize 함수 호출)
+	//if (SpawnedProjectile)
+	//{
+	//	// 화살 클래스(AMyNewArrow)로 형변환
+	//	// ※ 주의: AMyNewArrow.h를 반드시 #include 해야 합니다.
+	//	AMyNewArrow* NewArrow = Cast<AMyNewArrow>(SpawnedProjectile);
+
+	//	if (NewArrow)
+	//	{
+	//		// 데이터 에셋에서 받아온 값으로 화살 초기화
+	//		NewArrow->Initialize(SkillData->Range, SkillData->Speed);
+	//	}
+	//	else
+	//	{
+	//		// 만약 화살 클래스가 Initialize를 지원하지 않는다면 기본 컴포넌트 강제 설정
+	//		UProjectileMovementComponent* MovementComp = SpawnedProjectile->FindComponentByClass<UProjectileMovementComponent>();
+	//		if (MovementComp)
+	//		{
+	//			MovementComp->InitialSpeed = SkillData->Speed;
+	//			MovementComp->MaxSpeed = SkillData->Speed;
+	//			SpawnedProjectile->SetLifeSpan(SkillData->Range / SkillData->Speed);
+	//		}
+	//	}
+	//}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Projectile"));
 }
 
