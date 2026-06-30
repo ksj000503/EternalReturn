@@ -40,12 +40,14 @@ void UBaseStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 void UBaseStatComponent::SetMaxHP(float Value)
 {
+    UE_LOG(LogTemp, Warning, TEXT("SetMaxHP : %f"), Value);
    // 0 미만으로 내려가지 않게 Clamp
     MaxHP = FMath::Max(0.f, Value);
 }
 
 void UBaseStatComponent::SetCurrentHP(float Value)
 {
+    UE_LOG(LogTemp, Warning, TEXT("SetCurrentHP : Value=%f MaxHP=%f"), Value, MaxHP);
     // 0~MaxHP 사이로 Clamp
     CurrentHP = FMath::Clamp(Value, 0.f, MaxHP);
 
@@ -117,6 +119,11 @@ bool UBaseStatComponent::IsAlive() const
 
 void UBaseStatComponent::OnRep_CurrentHP()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("OnRep_CurrentHP HP=%f MaxHP=%f"),
+        CurrentHP,
+        MaxHP);
+
     OnHPChanged.Broadcast(CurrentHP, MaxHP);
 }
 
