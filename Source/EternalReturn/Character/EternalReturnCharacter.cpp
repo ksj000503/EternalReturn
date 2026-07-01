@@ -28,13 +28,14 @@ AEternalReturnCharacter::AEternalReturnCharacter()
 
 void AEternalReturnCharacter::BeginPlay()
 {
-    Super::BeginPlay();
-
     if (CharacterStatComponent)
     {
         CharacterStatComponent->OnHPChanged.AddDynamic(this, &ACombatEntityBase::HandleHPChanged);
         CharacterStatComponent->OnDeath.AddDynamic(this, &ACombatEntityBase::HandleDeath);
     }
+
+    // 데디케이티드 서버 -> 리슨 서버
+    Super::BeginPlay();
 }
 
 void AEternalReturnCharacter::GetLifetimeReplicatedProps(

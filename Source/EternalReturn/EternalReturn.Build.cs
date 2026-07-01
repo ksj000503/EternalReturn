@@ -20,8 +20,12 @@ public class EternalReturn : ModuleRules
 			"GameplayStateTreeModule",
 			"Niagara",
 			"UMG",
-			"Slate"
-		});
+			"Slate",
+            "Sockets", 
+			"Networking",
+            "Json", 
+			"JsonUtilities"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

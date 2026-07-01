@@ -74,6 +74,9 @@ bool UInventoryComponent::AddItem(FName ItemID)
                 Crafting->UpdateCraftableList();
             }
 
+            // 서버(호스트) 자신은 OnRep_InventorySlots가 자동 호출되지 않으므로 수동 브로드캐스트
+            OnInventoryUpdated.Broadcast();
+
             return true;
         }
     }
@@ -100,6 +103,9 @@ bool UInventoryComponent::RemoveItem(FName ItemID)
             {
                 Crafting->UpdateCraftableList();
             }
+
+            // 서버(호스트) 자신은 OnRep_InventorySlots가 자동 호출되지 않으므로 수동 브로드캐스트
+            OnInventoryUpdated.Broadcast();
 
             return true;
         }
@@ -225,6 +231,10 @@ bool UInventoryComponent::UnequipItem(int32 EquipSlotIndex)
     // 장비 슬롯 비우기
     EquipSlots[EquipSlotIndex].ItemID = NAME_None;
     EquipSlots[EquipSlotIndex].bIsEmpty = true;
+
+    // 서버(호스트) 자신은 OnRep_EquipSlots가 자동 호출되지 않으므로 수동 브로드캐스트
+    // (인벤토리 쪽은 위에서 호출한 AddItem() 내부의 Broadcast로 이미 갱신됨)
+    OnEquipSlotsUpdated.Broadcast();
 
     return true;
 }

@@ -31,8 +31,6 @@ ACombatEntityBase::ACombatEntityBase()
 
 void ACombatEntityBase::BeginPlay()
 {
-    Super::BeginPlay();
-
     // ─── StatComponent 델리게이트 바인딩 ────────────
     // HP 변경 → OnHPChanged(BP 이벤트) 호출
     // 사망    → OnDeath 호출
@@ -41,6 +39,9 @@ void ACombatEntityBase::BeginPlay()
         StatComponent->OnHPChanged.AddDynamic(this, &ACombatEntityBase::HandleHPChanged);
         StatComponent->OnDeath.AddDynamic(this, &ACombatEntityBase::HandleDeath);
     }
+
+    // 데디케이티드 서버 -> 리슨서버
+    Super::BeginPlay();
 }
 
 void ACombatEntityBase::GetLifetimeReplicatedProps(
