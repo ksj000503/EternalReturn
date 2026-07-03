@@ -132,6 +132,7 @@
 - `DefaultEngine.ini`의 `[ConsoleVariables]`에 `net.AllowPIESeamlessTravel=1` 추가 필요
 
 **트러블슈팅** — 트랜지션 맵 로딩 위젯이 PIE에서 보이지 않음 (에디터 애셋 캐싱으로 전환이 1ms 미만 처리됨). PIE 한정 이슈로 확인, 패키징 빌드에서 재검증 예정.
+
 <img width="372" height="210" alt="2026-07-03 13-33-58 (1)" src="https://github.com/user-attachments/assets/413e5047-ae0e-4ae8-8dd6-2979ad636fc7" />
 
 
