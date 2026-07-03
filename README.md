@@ -105,7 +105,7 @@
 | Blink 사거리 이상 | DataTable Range=3.0 → 실제 약 3cm (단위 착오) | Range 값 수정 |
 
 
-<img width="382" height="214" alt="2026-07-03 13-42-07" src="https://github.com/user-attachments/assets/717f9399-1026-4922-b14a-b77ff3ba0513" />
+<img width="392" height="220" alt="Skill" src="https://github.com/user-attachments/assets/128a905b-20d3-437d-9bd4-a3b7872063a3" />
 
 
 ---
@@ -127,7 +127,7 @@
 - 흐름: 슬롯 클릭 → ServerTakeItem → TakeItemFromStructure(GameMode) → ItemList 제거 + InventoryComponent.AddItem
 
 
-<img width="370" height="208" alt="Inven" src="https://github.com/user-attachments/assets/e1e9df48-1d4b-45a3-983a-fa94c2300c7f" />
+<img width="446" height="250" alt="Inven" src="https://github.com/user-attachments/assets/5a2fd060-3abb-48b2-a441-536fe273e56c" />
 
 
 ---
@@ -151,7 +151,7 @@
 - 원인 2: `InitSlots가 ItemList`를 파라미터로 받아 처리해서 최초 변경 시 `OnRep`이 발동하지 않음 → `self.ItemList`를 직접 참조하도록 수정
 
 
-<img width="346" height="194" alt="2026-07-03 13-46-37" src="https://github.com/user-attachments/assets/c65da5b4-2182-4897-95a2-726a9811c1f2" />
+<img width="334" height="188" alt="rnwhanf" src="https://github.com/user-attachments/assets/aa2830f9-4823-4b24-b244-9139df602235" />
 
 
 ---
@@ -163,6 +163,10 @@
 - **레이어 2 (액터 은닉)**: `VisionDetectionComponent`가 스피어 오버랩으로 시야 범위 내 액터만 노출
 
 **트러블슈팅** — `IsLocallyControlled` 타이밍 레이스 컨디션 (`PossessedBy` / `OnRep_Controller` C++ 오버라이드 순서 문제). Listen Server 전환 이후 재검토 예정.
+
+
+<img width="476" height="268" alt="tldi" src="https://github.com/user-attachments/assets/eacb99c0-2a99-4c93-8c0a-d7655989c091" />
+
 
 ---
 
@@ -177,7 +181,7 @@
 **트러블슈팅** — 트랜지션 맵 로딩 위젯이 PIE에서 보이지 않음 (에디터 애셋 캐싱으로 전환이 1ms 미만 처리됨). PIE 한정 이슈로 확인, 패키징 빌드에서 재검증 예정.
 
 
-<img width="372" height="210" alt="2026-07-03 13-33-58 (1)" src="https://github.com/user-attachments/assets/413e5047-ae0e-4ae8-8dd6-2979ad636fc7" />
+<img width="412" height="232" alt="Pick" src="https://github.com/user-attachments/assets/0744f749-953d-4078-b4e2-0551448c9375" />
 
 
 ---
