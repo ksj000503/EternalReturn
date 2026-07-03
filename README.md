@@ -46,8 +46,6 @@
 - 클라이언트는 6자리 방 코드 입력 → 백엔드가 호스트 IP/Port 반환 → `OpenLevel` 접속
 - 범위: LAN 플레이 (NAT 트래버설은 추후 과제)
 
-> TCP 백엔드/룸 시스템 자체는 이번 프로젝트에서 직접 구현하지 않고 설계·연동만 진행했습니다. Dedicated Server는 Epic Games Launcher 바이너리 엔진에서 지원하지 않아(GitHub 소스 빌드 필요) Listen Server 구조로 전환했습니다.
-
 ---
 
 ## 구현 내용
