@@ -1,5 +1,8 @@
 # EternalReturn — Unreal Engine 모작
 
+<img width="977" height="595" alt="image" src="https://github.com/user-attachments/assets/0a2317ff-450a-48f8-b5a6-e82395bbb435" />
+
+
 > 이터널 리턴(Eternal Return)을 Unreal Engine 5.7로 재현한 포트폴리오 프로젝트입니다.
 
 ---
@@ -63,6 +66,9 @@
 - 10슬롯 인벤토리 + 5슬롯 장비, `OnRep` 기반 리플리케이션으로 UI 동기화
 - 무기 타입 제한, 장착 시 스탯 연동
 
+### 구조물 / 루팅 시스템
+- `ItemList(Replicated)`는 구조물이 소유, 추가/제거는 GameMode가 경유 처리
+- 루팅: 슬롯 클릭 → `ServerTakeItem` → `TakeItemFromStructure` → `InventoryComponent.AddItem`
 ### 시야 / 포그오브워
 - `SceneCaptureComponent2D` + 렌더타겟으로 시야 밖 월드 암전
 - `VisionDetectionComponent`의 스피어 오버랩으로 시야 범위 밖 액터 은닉
@@ -114,6 +120,39 @@
 - UI 갱신 함수(`InventorySlotsUpdate`, `EquipSlotsUpdate`)를 `BP_Character` → `WBP_HUD`로 이동
 - 델리게이트 바인딩을 `WBP_HUD`의 `Event Construct`로 옮겨 위젯이 존재하는 클라이언트에서만 바인딩되도록 수정
 - `BP_PlayerController`의 `OnPossess`를 HUD 참조 설정만 담당하도록 단순화
+
+**구조물(루팅)과의 연동**
+- 인벤토리로 아이템이 들어오는 경로 중 하나가 구조물 루팅
+- 구조물 ItemList는 구조물이 소유(Replicated), 추가/제거는 GameMode가 처리
+- 흐름: 슬롯 클릭 → ServerTakeItem → TakeItemFromStructure(GameMode) → ItemList 제거 + InventoryComponent.AddItem
+
+
+<img width="370" height="208" alt="Inven" src="https://github.com/user-attachments/assets/e1e9df48-1d4b-45a3-983a-fa94c2300c7f" />
+
+
+---
+
+## 구조물 시스템
+
+**문제** — 루팅 가능한 구조물(상자 등)의 아이템 목록을 어디서 관리하고, 여러 클라이언트가 동시에 열었을 때 UI를 어떻게 동기화할지가 핵심이었습니다.
+
+**설계**
+- `ItemList(Replicated)`는 구조물이 소유, `OnRep`으로 UI 자동 갱신
+- 추가/제거는 `GameMode`가 처리 (구조물은 Owner 불명확 → RPC 라우팅 문제 방지)
+- 흐름: 슬롯 클릭 → `ServerTakeItem` → `TakeItemFromStructure(GameMode)` → `ItemList` 제거 + `InventoryComponent.AddItem`
+- `WBP_LootBox`는 `StructureRef` 기준으로 바인딩/언바인딩
+
+
+**트러블슈팅**
+
+- 아이템 클릭 시 다른 클라이언트에는 즉시 사라지는데, 클릭한 본인 화면에는 한 번 더 클릭해야 사라지는 버그
+
+- 원인 1: `S2C_OpenLootBox`가 `SetOwner(CastPC)`를 호출하지 않아 `Dedicated Server`가 `Client RPC`를 본인 클라이언트로 라우팅하지 못함 → `SetOwner(CastPC)` 추가로 해결
+- 원인 2: `InitSlots가 ItemList`를 파라미터로 받아 처리해서 최초 변경 시 `OnRep`이 발동하지 않음 → `self.ItemList`를 직접 참조하도록 수정
+
+
+<img width="346" height="194" alt="2026-07-03 13-46-37" src="https://github.com/user-attachments/assets/c65da5b4-2182-4897-95a2-726a9811c1f2" />
+
 
 ---
 
