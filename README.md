@@ -69,6 +69,7 @@
 ### 구조물 / 루팅 시스템
 - `ItemList(Replicated)`는 구조물이 소유, 추가/제거는 GameMode가 경유 처리
 - 루팅: 슬롯 클릭 → `ServerTakeItem` → `TakeItemFromStructure` → `InventoryComponent.AddItem`
+  
 ### 시야 / 포그오브워
 - `SceneCaptureComponent2D` + 렌더타겟으로 시야 밖 월드 암전
 - `VisionDetectionComponent`의 스피어 오버랩으로 시야 범위 밖 액터 은닉
@@ -132,7 +133,7 @@
 
 ---
 
-## 구조물 시스템
+### 구조물 시스템
 
 **문제** — 루팅 가능한 구조물(상자 등)의 아이템 목록을 어디서 관리하고, 여러 클라이언트가 동시에 열었을 때 UI를 어떻게 동기화할지가 핵심이었습니다.
 
