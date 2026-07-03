@@ -98,6 +98,10 @@
 | F/D 키 무반응 | `ExecuteSkill()`이 Q/W/E/R만 처리 | F→`UseTacticalSkill()`, D→`UseWeaponSkill()`로 라우팅 분리 |
 | Blink 사거리 이상 | DataTable Range=3.0 → 실제 약 3cm (단위 착오) | Range 값 수정 |
 
+
+<img width="382" height="214" alt="2026-07-03 13-42-07" src="https://github.com/user-attachments/assets/717f9399-1026-4922-b14a-b77ff3ba0513" />
+
+
 ---
 
 ### 인벤토리 컴포넌트
