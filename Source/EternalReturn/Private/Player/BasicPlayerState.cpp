@@ -33,8 +33,36 @@ void ABasicPlayerState::OnRep_SelectName()
 	// UI 업데이트나 캐릭터 변경 로직이 필요하다면 여기서 호출하세요!
 }
 
+// 서버 전용: 사망 처리
+// ACombatEntityBase::OnDeath_Implementation()에서 호출
+void ABasicPlayerState::SetDead()
+{
+	if (!HasAuthority()) return;
+	if (!bIsAlive) return;
+
+	bIsAlive = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("[SetDead] 호출됨, PlayerState=%s"), *GetName());
+
+	OnRep_IsAlive();
+}
+
+
+// 클라이언트: bIsAlive 복제 시 실행
+void ABasicPlayerState::OnRep_IsAlive()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[OnRep_IsAlive] Broadcast 시도, bIsAlive=%d"), bIsAlive);
+
+	// GameMode가 바인드한 델리게이트 브로드캐스트
+	// (서버에서는 SetDead()가 직접 호출, 클라이언트에서는 리플리케이션으로 자동 호출됨)
+	OnPlayerDied.Broadcast(this);
+}
+
+
 void ABasicPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(ABasicPlayerState, SelectName);
+	DOREPLIFETIME(ABasicPlayerState, bIsAlive);
 }

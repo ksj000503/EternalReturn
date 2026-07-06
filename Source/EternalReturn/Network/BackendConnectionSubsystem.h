@@ -40,6 +40,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Backend")
 	FOnBackendConnectionChanged OnConnectionChanged;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Backend")
+	FString PlayerNickname;
+
 private:
 
 	FSocket* BackendSocket = nullptr;

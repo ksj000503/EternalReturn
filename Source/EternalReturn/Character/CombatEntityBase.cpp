@@ -3,6 +3,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
+#include <Player/BasicPlayerState.h>
 
 ACombatEntityBase::ACombatEntityBase()
 {
@@ -206,6 +207,21 @@ void ACombatEntityBase::OnRep_ActiveStatusEffects()
 void ACombatEntityBase::OnDeath_Implementation()
 {
     Multicast_Ragdoll();
+
+    UE_LOG(LogTemp, Warning, TEXT("[OnDeath] HasAuthority=%d, IsPlayerControlled=%d"), HasAuthority(), IsPlayerControlled());
+
+    if (HasAuthority() && IsPlayerControlled())
+    {
+        if (ABasicPlayerState* PS = GetPlayerState<ABasicPlayerState>())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[OnDeath] PlayerState 찾음: %s, SetDead 호출"), *PS->GetName());
+            PS->SetDead();
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[OnDeath] PlayerState가 nullptr!"));
+        }
+    }
 }
 
 void ACombatEntityBase::Multicast_Ragdoll_Implementation()
