@@ -18,7 +18,6 @@ void ABasicPlayerState::CopyProperties(APlayerState* PlayerState)
 		// [로그 확인용] 에러(빨간색) 로그로 출력 창에 진짜 이 함수가 실행되는지 체크!
 		UE_LOG(LogTemp, Error, TEXT("!!복사 함수 작동 시작!! 기존 값: %s"), *SelectName.ToString());
 
-		// 클로드 말대로 this 빼고 깔끔하게 대입
 		NewPS->SelectName = SelectName;
 
 		UE_LOG(LogTemp, Error, TEXT("!!복사 완료!! 새 PlayerState에 들어간 값: %s"), *NewPS->SelectName.ToString());
