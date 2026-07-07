@@ -34,7 +34,6 @@ void AEternalReturnCharacter::BeginPlay()
         CharacterStatComponent->OnDeath.AddDynamic(this, &ACombatEntityBase::HandleDeath);
     }
 
-    // 데디케이티드 서버 -> 리슨 서버
     Super::BeginPlay();
 }
 
