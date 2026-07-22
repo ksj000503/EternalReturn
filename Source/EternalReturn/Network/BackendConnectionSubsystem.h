@@ -34,9 +34,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Backend")
 	bool IsConnectedToBackend() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Backend")
-	void SendMassage() const;
-
 	UPROPERTY(BlueprintAssignable, Category = "Backend")
 	FOnBackendMessageReceived OnMessageReceived;
 
