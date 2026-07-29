@@ -38,10 +38,9 @@
 로그인/로비/룸 매칭은 UE 네트워크 세션이 아닌 별도 TCP 백엔드로 처리
 실제 게임 플레이는 Listen Server로 동작
 
-```
+
 <img width="1800" height="1744" alt="EternalReturn_전체구조_다이어그램" src="https://github.com/user-attachments/assets/ba71f33c-c076-4fc2-99ba-53f73a7224a8" />
 
-```
 
 - 메인 로비는 TCP 클라이언트 화면으로만 동작 (UE 네트워크 세션 아님)
 - 호스트가 캐릭터 선택 레벨에 진입하는 시점에 Listen Server 시작
