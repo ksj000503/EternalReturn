@@ -39,11 +39,8 @@
 실제 게임 플레이는 Listen Server로 동작
 
 ```
-[클라이언트] --TCP--> [백엔드 서버 (로그인 / 룸코드 / MySQL)]
-                              |
-                     방 코드로 host IP·Port 교환
-                              |
-[클라이언트] --UE Listen Server 접속(OpenLevel)--> [호스트 = 서버 겸 클라이언트]
+<img width="1800" height="1744" alt="EternalReturn_전체구조_다이어그램" src="https://github.com/user-attachments/assets/39623547-2bd0-4aa9-97cc-40f1a29c2640" />
+
 ```
 
 - 메인 로비는 TCP 클라이언트 화면으로만 동작 (UE 네트워크 세션 아님)
