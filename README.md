@@ -39,7 +39,7 @@
 실제 게임 플레이는 Listen Server로 동작
 
 ```
-<img width="1800" height="1744" alt="EternalReturn_전체구조_다이어그램" src="https://github.com/user-attachments/assets/39623547-2bd0-4aa9-97cc-40f1a29c2640" />
+<img width="1800" height="1744" alt="EternalReturn_전체구조_다이어그램" src="https://github.com/user-attachments/assets/ba71f33c-c076-4fc2-99ba-53f73a7224a8" />
 
 ```
 
