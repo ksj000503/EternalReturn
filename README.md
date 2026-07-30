@@ -17,9 +17,16 @@
 | 개발 기간 | 2026.05 ~ 2026.07 |
 | 개발 인원 | 1인 |
 
-- **선정 이유:** 이터널 리턴 플레이 중 게임 구조에 대한 궁금증에서 시작
-  상용 게임 수준의 전투/스킬, 인벤토리, 시야 시스템, 몬스터 AI, 로비/매칭 등을 직접 설계·구현하며 멀티플레이어 개발 파이프라인 전반 경험 목표
-- **집중 포인트:** 이터널 리턴 특유의 시야 기반 정보전과 실시간 전투/스킬 시스템 재현도
+### 프로젝트 소개
+
+- 평소 즐겨 하던 게임 이터널 리턴을 플레이하면서 **"이 게임은 어떤 구조로 만들어졌을까?"** 라는 궁금증에서 시작한 프로젝트
+- 전투/스킬, 인벤토리, 시야 시스템, 몬스터 AI, 로비/매칭 등 시스템을 직접 설계·구현
+- 멀티플레이어 게임 개발 파이프라인 전반을 경험하는 것을 목표로 개발
+- 특히 이터널 리턴 특유의 **시야 기반 정보전**과 **전투 시스템** 구현에 집중
+
+>  **목표**
+이를 통해 네트워크, 게임플레이, UI, 데이터 관리까지 멀티플레이어 게임 개발 전 과정을 경험하고, 실제 상용 게임에서 사용하는 구조를 직접 설계·구현하는 것을 목표로 했습니다.
+>
 
 ---
 
@@ -96,18 +103,20 @@
 
 ### 스킬 컴포넌트
 
-**문제** — 이터널 리턴 원작의 스킬 체계를 캐릭터마다 다른 로직을 가지면서도 하나의 공용 컴포넌트로 관리해야 했음
+**설계 의도**
+캐릭터마다 다른 스킬 로직을 갖더라도 하나의 공용 컴포넌트로 관리
 
-**설계**
-- `USkillComponent`가 쿨타임/레벨/사용 가능 여부를 전담하고, 실제 연출은 캐릭터별 Blueprint에서 오버라이드하는 구조로 분리
-- `TargetLocation`(마우스 클릭 위치)을 `ExecuteSkill → UseWeaponSkill/UseTacticalSkill → SkillType() → 타입별 함수`까지 하나의 파라미터로 관통시켜 모든 스킬 타입의 진입점 통일
+**구조**
 
-**트러블슈팅**
-| 문제 | 원인 | 해결 |
-|---|---|---|
-| 3연속 공격 몽타주 미재생 | `bUseToggle`이 Replicated 누락 / AnimGraph Slot 연결 누락 / Play Rate가 공격속도 대비 부족 | 3가지 원인 각각 수정 |
-| F/D 키 무반응 | `ExecuteSkill()`이 Q/W/E/R만 처리 | F→`UseTacticalSkill()`, D→`UseWeaponSkill()`로 라우팅 분리 |
-| Blink 사거리 이상 | DataTable Range=3.0 → 실제 약 3cm (단위 착오) | Range 값 수정 |
+```
+스킬 입력→ 서버에 스킬 사용 요청→ 데이터에 지정된 스킬 종류에 따라 분기→ 해당 스킬 실행
+```
+
+**구현 포인트**
+
+- DataAsset: Q/W/E/R 스킬마다 스킬 이름, 종류, 재사용 대기시간, 소모 마나, 사거리, 피해량/회복량/보호막 수치, 발사체 종류, 군중제어(CC) 부여 여부 등 스킬에 필요한 모든 수치와 설정을 데이터로 저장
+- TargetLocation: 마우스 클릭 위치를 ExecuteSkill → UseWeaponSkill/UseTacticalSkill → SkillType()까지 7개 타입별 함수에 하나의 파라미터로 관통
+- SkillType 분기: Projectile / Dash / AreaDamage / Buff / CC / Toggle / Passive 7가지로 분류
 
 <img width="392" height="220" alt="Skill" src="https://github.com/user-attachments/assets/128a905b-20d3-437d-9bd4-a3b7872063a3" />
 
@@ -115,21 +124,25 @@
 
 ### 인벤토리 컴포넌트
 
-**문제** — Dedicated Server는 서버 프로세스에 HUD/Widget이 존재하지 않는데, 초기 구조는 UI 갱신 함수가 `BP_Character`에 있어 서버에서 접근할 대상이 없었음
+**설계 의도**
+서버 권위를 유지하면서 UI가 자동으로 동기화되도록 함
 
-**설계** — `Multicast RPC` 방식에서 `ReplicatedUsing`(`OnRep_InventorySlots`, `OnRep_EquipSlots`) 방식으로 전환
-Multicast는 서버가 모든 클라이언트에 무조건 브로드캐스트하는 구조라 결합도가 높은 반면, OnRep은 값이 바뀐 클라이언트에서만 자동 호출되어 서버 로직과 분리하기 좋았음
+**동작 흐름**
 
-**트러블슈팅**
-- UI 갱신 함수(`InventorySlotsUpdate`, `EquipSlotsUpdate`)를 `BP_Character` → `WBP_HUD`로 이동
-- 델리게이트 바인딩을 `WBP_HUD`의 `Event Construct`로 옮겨 위젯이 존재하는 클라이언트에서만 바인딩되도록 수정
-- `BP_PlayerController`의 `OnPossess`를 HUD 참조 설정만 담당하도록 단순화
+```
+서버에서 인벤토리 변경→ 클라이언트에 변경 사항 동기화→ UI에 자동 반영
+```
 
-**구조물(루팅)과의 연동**
-- 인벤토리로 아이템이 들어오는 경로 중 하나가 구조물 루팅
-- 구조물 ItemList는 구조물이 소유(Replicated), 추가/제거는 GameMode가 처리
-- 흐름: 슬롯 클릭 → ServerTakeItem → TakeItemFromStructure(GameMode) → ItemList 제거 + InventoryComponent.AddItem
+**구현 포인트**
 
+- InventorySlots/EquipSlots는 Replicated 변수
+- OnRep_InventorySlots/OnRep_EquipSlots가 값 변경 시 자동 호출
+- OnInventoryUpdated/OnEquipSlotsUpdated 델리게이트를 WBP_HUD의 Event Construct에서 바인딩
+- Host에서는 OnRep이 자동 호출되지 않아 별도 처리가 필요
+
+> ❓ **왜 Multicast 대신 OnRep을 사용했는가?**
+Multicast는 서버가 모든 클라이언트에 무조건 뿌리는 구조라 결합도가 높아지는 반면, OnRep은 값이 실제로 바뀐 클라이언트에서만 자동 호출되고 서버 로직과 분리할 수 있어 더 적합하다고 판단
+>
 <img width="446" height="250" alt="Inven" src="https://github.com/user-attachments/assets/5a2fd060-3abb-48b2-a441-536fe273e56c" />
 
 ---
@@ -157,12 +170,20 @@ Multicast는 서버가 모든 클라이언트에 무조건 브로드캐스트하
 
 ### 시야 / 포그오브워 시스템
 
-**설계** — 두 개 레이어로 구성
-- **레이어 1 (월드 암전):** `SceneCaptureComponent2D` + `RT_VisionMask` 렌더타겟으로 시야 밖 월드를 어둡게 처리
-- **레이어 2 (액터 은닉):** `VisionDetectionComponent`가 스피어 오버랩으로 시야 범위 내 액터만 노출
+**설계 의도**
+이터널 리턴 특유의 시야 기반 정보전을 재현 — 시야 밖 정보를 차단
 
-**트러블슈팅** — `IsLocallyControlled` 타이밍 레이스 컨디션 (`PossessedBy` / `OnRep_Controller` C++ 오버라이드 순서 문제)
-Listen Server 전환 이후 재검토 예정
+**구조**
+
+```
+플레이어 시야 범위 계산→ 범위 안에 있는지 확인→ 있으면 보이게, 없으면 숨김
+```
+
+**구현 포인트**
+
+- SceneCaptureComponent2D + RenderTarget: 시야 범위를 캡처해 월드 암전 처리
+- SphereOverlap: 시야 구체와 겹친 액터를 보이게/숨기게 처리
+- IsLocallyControlled: 각 클라이언트가 자기 화면 기준으로만 판정하도록 게이팅
 
 <img width="476" height="268" alt="tldi" src="https://github.com/user-attachments/assets/eacb99c0-2a99-4c93-8c0a-d7655989c091" />
 
@@ -170,15 +191,21 @@ Listen Server 전환 이후 재검토 예정
 
 ### 캐릭터 선택 → 인게임 전환
 
-**설계**
-- `GameMode::BeginPlay`, `HandleStartingNewPlayer`는 서버 사이드에서만 실행
-  Seamless Travel 중인 플레이어는 `K2_PostLogin`이 호출되지 않아 `HandleStartingNewPlayer`를 공통 훅으로 사용
-- `SpawnIndex`를 클래스 변수로 관리해 호출 간 초기화 방지
-- InGame GameMode의 `Default Pawn Class`를 `None`으로 설정해 커스텀 스폰 로직 이전 자동 스폰 방지
-- `DefaultEngine.ini`의 `[ConsoleVariables]`에 `net.AllowPIESeamlessTravel=1` 추가 필요
+**설계 의도**
+캐릭터 선택 상태를 다른 플레이어와 공유하고, 인게임 진입 시 정확히 반영되도록 함
 
-**트러블슈팅** — 트랜지션 맵 로딩 위젯이 PIE에서 보이지 않음 (에디터 애셋 캐싱으로 전환이 1ms 미만 처리됨)
-PIE 한정 이슈로 확인, 패키징 빌드에서 재검증 예정
+**캐릭터 선택 흐름**
+
+```
+캐릭터 클릭으로 선택 요청→ 서버에 선택한 캐릭터 정보 전달→ PlayerState에 선택 정보 저장→ 다음 레벨로 이동 준비→ 이동 후 선택 정보를 유지한 채 캐릭터 스폰
+```
+
+**구현 포인트**
+
+- Seamless Travel: 레벨 전환 시 로딩 화면 없이 다음 레벨로 자연스럽게 이동시키는 트래블 방식
+- 레벨 전환 중에도 월드가 항상 하나는 떠 있어야 한다는 엔진 제약으로 Transition Map 사용
+- HandleStartingNewPlayer: 신규 접속과 Seamless Travel 모두에서 호출되는 스폰 훅 (PostLogin은 호출 안 됨)
+- CopyProperties: 캐릭터 선택 정보를 다음 레벨에서도 유지하도록 처리
 
 <img width="412" height="232" alt="Pick" src="https://github.com/user-attachments/assets/0744f749-953d-4078-b4e2-0551448c9375" />
 
@@ -186,13 +213,33 @@ PIE 한정 이슈로 확인, 패키징 빌드에서 재검증 예정
 
 ## 트러블슈팅 / 배운 점
 
-- OnRep 콜백은 서버 자신에게는 호출되지 않으므로, 서버에서 리플리케이트 배열을 수정할 때는 수동으로 `Broadcast()`를 함께 호출해야 함
-- `AddDynamic` 델리게이트 바인딩은 `Super::BeginPlay()` 이전에 배치해야 `ReceiveBeginPlay()` 중 발생하는 브로드캐스트를 놓치지 않음
-- Listen Server 환경에서는 호스트가 서버와 로컬 플레이어를 겸하기 때문에, Dedicated Server(로컬 플레이어 없음)에서는 드러나지 않던 버그가 노출됨
-- Character에 부착된 컴포넌트의 Client RPC는 정상 라우팅되지 않아, PlayerController를 경유해서 처리
-- `bIsCrafting` 등 상태 플래그는 클라이언트 측 체크가 정상 동작하려면 `Replicated` 지정 필요
-- MySQL C API: `mysql_real_escape_string`은 `std::vector<char>` 버퍼 필요, 스레드 핸들러엔 `mysql_thread_init()`/`mysql_thread_end()` 필요, `mysql_store_result()` null 체크 필요
-- `nlohmann::json`은 잘못된 UTF-8에 예외를 던지므로 `Response.dump()`는 try/catch로 감싸야 함
+### ① Seamless Travel
+
+| 항목 | 내용 |
+| --- | --- |
+| **문제** | 캐릭터 선택 → 인게임 전환 시 Possess(스폰) 자체가 안 되고 SelectName도 초기화됨 |
+| **원인** | 스폰(Possess) 로직이 PostLogin에 있었는데, Seamless Travel로 넘어온 플레이어에게는 호출되지 않음 |
+| **해결** | 스폰(Possess) 로직을 HandleStartingNewPlayer로 이전 (신규 접속·Seamless Travel 공통 대응) |
+| **결과** | 신규 접속, Seamless Travel 양쪽 모두 캐릭터 선택 정보가 정확히 유지된 채 스폰됨 |
+
+> 💡 **배운 점**
+엔진 라이프사이클 훅마다 호출 시점과 대상이 다르다는 것 — PostLogin, HandleStartingNewPlayer, OnRestartPlayer 각각의 호출 조건을 정확히 알아야 함
+> 
+
+---
+
+### ② OnRep 호출 순서
+
+| 항목 | 내용 |
+| --- | --- |
+| **문제** | HP는 정상적으로 Replication 되지만 UI가 갱신되지 않는 문제 발생 |
+| **원인** | OnRep 함수가 호출되는 시점보다 UI의 Delegate 바인딩이 늦게 수행되어 Broadcast를 수신하지 못함. Listen Server에서는 호스트 자신에게는 OnRep이 자동 호출되지 않는 특성도 함께 확인 |
+| **해결** | Delegate 바인딩 시점을 조정하여 OnRep 호출 이전에 구독이 완료되도록 수정. 호스트의 경우에는 서버에서 값을 변경한 직후 직접 Broadcast를 호출하도록 처리 |
+| **결과** | Host와 Client 모두 동일한 시점에 UI가 정상 갱신되도록 개선 |
+
+> 💡 **배운 점**
+Replication만 이해하는 것이 아니라 OnRep 호출 시점과 객체 초기화 순서까지 함께 고려해야 한다는 것을 배웠습니다.
+>
 
 ---
 
