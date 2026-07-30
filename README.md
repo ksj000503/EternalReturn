@@ -140,7 +140,7 @@
 
 > ❓ **왜 Multicast 대신 OnRep을 사용했는가?**
 Multicast는 서버가 모든 클라이언트에 무조건 뿌리는 구조라 결합도가 높아지는 반면, OnRep은 값이 실제로 바뀐 클라이언트에서만 자동 호출되고 서버 로직과 분리할 수 있어 더 적합하다고 판단
->
+
 <img width="446" height="250" alt="Inven" src="https://github.com/user-attachments/assets/5a2fd060-3abb-48b2-a441-536fe273e56c" />
 
 ---
