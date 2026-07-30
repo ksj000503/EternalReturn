@@ -99,8 +99,6 @@
 
 ---
 
-## 하이라이트
-
 ### 스킬 컴포넌트
 
 **설계 의도**
@@ -149,21 +147,18 @@ Multicast는 서버가 모든 클라이언트에 무조건 뿌리는 구조라 �
 
 ### 구조물 시스템
 
-**문제** — 루팅 가능한 구조물(상자 등)의 아이템 목록을 어디서 관리하고, 여러 클라이언트가 동시에 열었을 때 UI를 어떻게 동기화할지가 핵심
+설계 의도 루팅 가능한 구조물(상자 등)의 아이템 목록을 서버 권위로 관리하고, 여러 클라이언트가 동시에 열어도 UI가 동기화되도록 함
 
-**설계**
-- `ItemList(Replicated)`는 구조물이 소유, `OnRep`으로 UI 자동 갱신
-- 추가/제거는 `GameMode`가 처리 (구조물은 Owner 불명확 → RPC 라우팅 문제 방지)
-- 흐름: 슬롯 클릭 → `ServerTakeItem` → `TakeItemFromStructure(GameMode)` → `ItemList` 제거 + `InventoryComponent.AddItem`
-- `WBP_LootBox`는 `StructureRef` 기준으로 바인딩/언바인딩
+구조
 
-**트러블슈팅**
+슬롯 클릭 → 서버에 아이템 획득 요청 → GameMode가 목록에서 제거 + 인벤토리에 추가 → UI 자동 갱신
 
-아이템 클릭 시 다른 클라이언트에는 즉시 사라지는데, 클릭한 본인 화면에는 한 번 더 클릭해야 사라지는 버그
+구현 포인트
 
-- 원인 1: `S2C_OpenLootBox`가 `SetOwner(CastPC)`를 호출하지 않아 `Dedicated Server`가 `Client RPC`를 본인 클라이언트로 라우팅하지 못함 → `SetOwner(CastPC)` 추가로 해결
-- 원인 2: `InitSlots`가 `ItemList`를 파라미터로 받아 처리해서 최초 변경 시 `OnRep`이 발동하지 않음 → `self.ItemList`를 직접 참조하도록 수정
-
+ItemList(Replicated)는 구조물이 소유, OnRep으로 UI 자동 갱신
+추가/제거는 GameMode가 처리 (구조물은 Owner 불명확 → RPC 라우팅 문제 방지)
+흐름: 슬롯 클릭 → ServerTakeItem → TakeItemFromStructure(GameMode) → ItemList 제거 + InventoryComponent.AddItem
+WBP_LootBox는 StructureRef 기준으로 바인딩/언바인딩
 <img width="334" height="188" alt="rnwhanf" src="https://github.com/user-attachments/assets/aa2830f9-4823-4b24-b244-9139df602235" />
 
 ---
@@ -211,6 +206,51 @@ Multicast는 서버가 모든 클라이언트에 무조건 뿌리는 구조라 �
 
 ---
 
+### TCP 회원가입 / 로그인
+
+**설계 의도**
+인증(계정) 처리와 게임 세션(전투·리플리케이션) 처리를 완전히 분리하기 위해 별도 TCP 백엔드 구축
+
+**구조**
+
+```
+클라이언트 로그인 요청 → 서버에서 DB 조회 → 로그인 성공/실패 응답 → 클라이언트에 결과 반영
+```
+
+**구현 포인트**
+
+- DatabaseManager: mutex로 동시 요청 보호, mysql_real_escape_string으로 SQL Injection 방지
+- BackendConnectionSubsystem(GameInstanceSubsystem)이 델리게이트로 비동기 응답 수신, 레벨 이동 후에도 유지
+
+---
+
+### Crafting 컴포넌트
+
+**설계 의도**
+인벤토리가 바뀔 때마다 제작 가능 목록은 자동으로 계산되게 하고, 실제 제작 진행은 서버가 시간을 재며 권한을 갖고 처리하도록 분리
+
+**구조 1 — 제작 가능 목록 갱신**
+
+```
+인벤토리 변경 감지 → 서버가 보유 중인 재료 확인 → 조합 가능한 아이템 목록 갱신 → 클라이언트에 동기화
+```
+
+**구조 2 — 제작 진행**
+
+```
+제작 시작 요청 → 서버가 아이템 등급에 따라 제작 시간 결정 → 클라이언트에 게이지 UI 표시 요청 → 시간 경과 후 재료 소모 + 결과물 지급
+```
+
+**구현 포인트**
+
+- 재료 두 가지를 모두 갖고 있는 조합만 골라서 제작 가능 목록을 자동으로 추림
+- 아이템 등급이 높을수록 제작 시간이 길어지도록 6단계로 차등 설정
+- 제작 중인지 여부를 서버가 들고 있어서, 이동 등으로 취소될 때도 클라이언트가 임의 판단하지 않고 서버 상태를 그대로 따름
+- 목록 갱신은 서버 자신에게는 자동 반영되지 않아서, 서버에서 직접 갱신 알림을 호출
+- 컴포넌트가 아니라 PlayerController를 거쳐서 게이지 UI 시작을 클라이언트에 알림
+  
+---
+
 ## 트러블슈팅 / 배운 점
 
 ### ① Seamless Travel
@@ -240,34 +280,6 @@ Multicast는 서버가 모든 클라이언트에 무조건 뿌리는 구조라 �
 > 💡 **배운 점**
 Replication만 이해하는 것이 아니라 OnRep 호출 시점과 객체 초기화 순서까지 함께 고려해야 한다는 것을 배웠습니다.
 >
-
----
-
-## 진행 중 / 앞으로 할 것
-
-### 대기방(프라이빗 룸) PlayerSlot 입장/퇴장 리플리케이션
-- 방 코드 기반 입장/퇴장 이벤트를 TCP 백엔드에서 브로드캐스트하고, 클라이언트는 이를 받아 `WBP_PlayerSlot` UI를 갱신하는 구조로 구현 예정
-- 호스트 위임(방장이 나갔을 때 다음 인원에게 방장 권한 이전) 로직 추가 검토
-
-### 미니맵, Tab 스코어보드
-- 미니맵은 `SceneCaptureComponent2D`로 탑다운 렌더타겟을 뽑아 UMG에 표시, 시야 시스템과 연동해 아군/시야 내 적만 노출하는 방식으로 구현 예정
-- Tab 스코어보드는 PlayerState의 리플리케이트 변수(킬/데스/골드 등)를 바인딩해 실시간 갱신되는 위젯으로 구성 예정
-
-### 남은 전술 스킬 스텁 구현
-- 현재 `UseTacticalSkill()`에 라우팅만 되어 있고 실제 로직이 비어 있는 전술 스킬들을 `SkillType` Enum 분기에 맞춰 하나씩 채워나갈 예정
-
-### 비밀번호 해싱, 중복 로그인 방지
-- 비밀번호는 현재 평문 저장 상태 → bcrypt 또는 SHA-256 + Salt 적용해 백엔드 DB 저장 방식 변경 예정
-- 중복 로그인은 서버 측에 유저별 세션(소켓) 테이블을 두고, 동일 계정으로 재로그인 시 기존 세션을 강제 종료하거나 거부하는 방식으로 구현 예정
-
----
-
-## 실행 방법
-
-1. 프로젝트 클론
-2. `EternalReturn.uproject` 우클릭 → `Generate Visual Studio project files`
-3. Visual Studio에서 빌드 (`Ctrl + Shift + B`)
-4. 언리얼 에디터 실행
 
 ---
 
